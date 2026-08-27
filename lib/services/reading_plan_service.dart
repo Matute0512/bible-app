@@ -86,6 +86,10 @@ class ReadingPlanService {
     return now;
   }
 
+  /// Whether the installation date has been persisted (i.e. onboarding done).
+  Future<bool> hasInstallationDate() async =>
+      prefs.containsKey(_installationDateKey);
+
   /// Number of whole days elapsed since installation (0 on day one).
   ///
   /// [now] is injectable for testing.
@@ -131,6 +135,17 @@ class ReadingPlanService {
   Future<ReadingPlanEntry> chapterForToday(
     BibleTranslation translation, {
     DateTime? now,
+  }) async =>
+      (await todayAndTomorrow(translation, now: now)).today;
+
+  /// Resolves today's and tomorrow's chapters with a single plan build.
+  ///
+  /// Tomorrow's entry labels the scheduled daily notification, so the
+  /// notification always advertises the passage the user is about to read.
+  Future<({ReadingPlanEntry today, ReadingPlanEntry tomorrow})>
+      todayAndTomorrow(
+    BibleTranslation translation, {
+    DateTime? now,
   }) async {
     final plan = await buildPlan(translation);
     if (plan.isEmpty) {
@@ -139,6 +154,9 @@ class ReadingPlanService {
       );
     }
     final elapsed = await daysElapsed(now: now);
-    return plan[elapsed % plan.length];
+    return (
+      today: plan[elapsed % plan.length],
+      tomorrow: plan[(elapsed + 1) % plan.length],
+    );
   }
 }
