@@ -37,20 +37,30 @@ class NotificationService {
     }
 
     // Load the timezone database and point `tz.local` at the device's zone so
-    // scheduled times match the user's wall clock.
+    // scheduled times match the user's wall clock. Failing gracefully keeps
+    // `tz.local` at UTC instead of crashing app startup.
     tz.initializeTimeZones();
-    final timezoneInfo = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
+    try {
+      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
+    } on Exception {
+      // Notifications still schedule, just at UTC until the zone resolves.
+    }
 
     const settings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(),
     );
 
-    await _plugin.initialize(
-      settings: settings,
-      onDidReceiveNotificationResponse: (_) => onNotificationTap?.call(),
-    );
+    // A plugin failure must never prevent the app from launching.
+    try {
+      await _plugin.initialize(
+        settings: settings,
+        onDidReceiveNotificationResponse: (_) => onNotificationTap?.call(),
+      );
+    } on Exception {
+      // Notification features degrade to no-ops; the reading still works.
+    }
 
     _initialized = true;
   }
