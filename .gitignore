@@ -44,5 +44,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Release signing secrets (never commit these)
+/android/key.properties
+/android/app/upload-keystore.jks
+
 # Claude Code local settings (machine-specific, must not be committed)
 .claude/settings.local.json
