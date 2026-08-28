@@ -37,21 +37,8 @@ class NotificationService {
     }
 
     // Load the timezone database and point `tz.local` at the device's zone so
-    // scheduled times match the user's wall clock. If the device's IANA name
-    // cannot be resolved, fall back to a fixed-offset zone instead of silently
-    // staying at UTC (which would fire the reminder at the wrong local hour).
-    tz.initializeTimeZones();
-    try {
-      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
-      debugPrint('[notifications] Device timezone: ${timezoneInfo.identifier}');
-      tz.setLocalLocation(tz.getLocation(timezoneInfo.identifier));
-      debugPrint('[notifications] tz.local set to: ${tz.local.name}');
-    } on Exception catch (e) {
-      debugPrint('[notifications] Timezone lookup failed ($e); '
-          'falling back to the device UTC offset');
-      _setFallbackFixedOffsetLocation();
-      debugPrint('[notifications] tz.local set to fixed offset: ${tz.local.name}');
-    }
+    // scheduled times match the user's wall clock. See [_initTimezone].
+    await _initTimezone();
 
     const settings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
@@ -94,18 +81,39 @@ class NotificationService {
     _initialized = true;
   }
 
-  /// Builds a [tz.Location] with the device's current UTC offset, used when the
-  /// IANA timezone name returned by the platform cannot be resolved by the
-  /// `timezone` package. Keeps the wall-clock hour correct (no DST tracking,
-  /// which is acceptable for a daily reminder).
-  void _setFallbackFixedOffsetLocation() {
-    final offset = DateTime.now().timeZoneOffset;
-    tz.setLocalLocation(tz.Location(
-      'Fixed offset $offset',
-      [0],
-      [0],
-      [tz.TimeZone(offset, isDst: false, abbreviation: 'UTC$offset')],
-    ));
+  /// Resolves the device timezone and points `tz.local` at it.
+  ///
+  /// The name passed to `tz.getLocation` is also forwarded to the Android
+  /// plugin, which parses it with `java.time.ZoneId.of(...)`. That call only
+  /// accepts valid IANA names, so the fallback MUST be a real IANA zone
+  /// ('UTC') and never a synthetic name like 'Fixed offset ...' — an invalid
+  /// name makes the native side throw and the reminder is silently dropped.
+  Future<void> _initTimezone() async {
+    tz.initializeTimeZones();
+    String targetTimeZone = 'UTC'; // Safe fallback by default.
+
+    try {
+      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+      // v5 of flutter_timezone returns a TimezoneInfo, not a String.
+      final deviceTz = timezoneInfo.identifier;
+      debugPrint('[notifications] Device timezone from plugin: $deviceTz');
+
+      // Explicit mapping of known aliases to canonical IANA names that
+      // ZoneId.of() accepts (some Android devices report legacy aliases).
+      if (deviceTz == 'America/Buenos_Aires') {
+        targetTimeZone = 'America/Argentina/Buenos_Aires';
+      } else {
+        targetTimeZone = deviceTz;
+      }
+
+      tz.setLocalLocation(tz.getLocation(targetTimeZone));
+      debugPrint(
+          '[notifications] tz.local set successfully to: ${tz.local.name}');
+    } catch (e) {
+      debugPrint('[notifications] Timezone lookup failed for "$targetTimeZone" '
+          '($e). Falling back to UTC.');
+      tz.setLocalLocation(tz.getLocation('UTC'));
+    }
   }
 
   /// Requests the Android 13+ runtime notification permission. No-op on older
