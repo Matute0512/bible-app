@@ -52,9 +52,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     // Best-effort: denial of the notification permission must not block
     // onboarding (the user can re-enable it later).
     try {
-      await widget.notificationService.requestPermission();
-    } on Exception {
-      // Permission denial is non-fatal.
+      final granted = await widget.notificationService.requestPermission();
+      debugPrint('[notifications] Onboarding: permission $granted');
+    } on Exception catch (error) {
+      debugPrint('[notifications] Permission request failed: $error');
     }
 
     if (!mounted) {

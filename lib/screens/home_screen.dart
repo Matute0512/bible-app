@@ -39,6 +39,19 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _load();
+    // Ask for the Android 13+ notification permission here too, so users who
+    // installed the app on Android 12 and later upgraded also get the runtime
+    // prompt. It is a no-op (no dialog) once the user has already answered.
+    _requestNotificationPermission();
+  }
+
+  /// Best-effort runtime permission request; denial never blocks reading.
+  Future<void> _requestNotificationPermission() async {
+    try {
+      await widget.notificationService.requestPermission();
+    } on Exception {
+      // Permission denial is non-fatal.
+    }
   }
 
   Future<void> _load() async {
@@ -67,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       // Keep the daily notification in sync with the reading plan.
-      await _rescheduleNotification(plan.tomorrow.reference);
+      await _rescheduleNotification(plan);
     } on BibleApiException catch (error) {
       if (!mounted) {
         return;
@@ -79,20 +92,36 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Re-arms the daily notification with the upcoming passage. Best-effort:
-  /// notification failures must never block the reading.
-  Future<void> _rescheduleNotification(String passageReference) async {
+  /// Re-arms the daily notification with the passage the user will see when it
+  /// fires: today's chapter when the reminder still fires today, tomorrow's
+  /// when today's reminder already passed. Best-effort: notification failures
+  /// must never block the reading.
+  Future<void> _rescheduleNotification(
+    ({ReadingPlanEntry today, ReadingPlanEntry tomorrow}) plan,
+  ) async {
     if (!widget.preferences.notificationsEnabled) {
       return;
     }
     try {
       await widget.notificationService.scheduleDailyNotification(
         time: widget.preferences.notificationTime,
-        passageReference: passageReference,
+        passageReference: _entryForNextReminder(plan).reference,
       );
-    } on Exception {
-      // Scheduling is best-effort.
+    } on Exception catch (error) {
+      debugPrint('[notifications] Scheduling failed: $error');
     }
+  }
+
+  /// The chapter the daily reminder should advertise, based on whether the
+  /// reminder time still falls later today or already passed.
+  ReadingPlanEntry _entryForNextReminder(
+    ({ReadingPlanEntry today, ReadingPlanEntry tomorrow}) plan,
+  ) {
+    final now = TimeOfDay.now();
+    final reminder = widget.preferences.notificationTime;
+    final nowMinutes = now.hour * 60 + now.minute;
+    final reminderMinutes = reminder.hour * 60 + reminder.minute;
+    return nowMinutes >= reminderMinutes ? plan.tomorrow : plan.today;
   }
 
   Future<void> _openSettings() async {
@@ -118,27 +147,37 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _handleTimeChanged(TimeOfDay time) async {
     await widget.preferences.setNotificationTime(time);
 
+    var scheduled = false;
     try {
       final plan =
           await widget.readingPlan.todayAndTomorrow(widget.preferences.translation);
-      await widget.notificationService.scheduleDailyNotification(
+      scheduled = await widget.notificationService.scheduleDailyNotification(
         time: time,
-        passageReference: plan.tomorrow.reference,
+        passageReference: _entryForNextReminder(plan).reference,
       );
-    } on Exception {
-      // The reading still works even if scheduling fails.
+    } on Exception catch (error) {
+      debugPrint('[notifications] Scheduling failed: $error');
     }
 
     if (!mounted) {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Row(
           children: [
-            Icon(Icons.check_circle),
-            SizedBox(width: 12),
-            Expanded(child: Text('Notificación diaria programada')),
+            Icon(
+              scheduled ? Icons.check_circle : Icons.error_outline,
+              color: scheduled ? null : Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                scheduled
+                    ? 'Notificación diaria programada'
+                    : 'No se pudo programar la notificación. Revisá los permisos',
+              ),
+            ),
           ],
         ),
       ),
