@@ -22,6 +22,17 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
+
+# App launcher icon. Regenerate after editing assets/icon with:
+#   dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#5C6BC0"
+  adaptive_icon_foreground: "assets/icon/foreground_icon.png"
+  min_sdk_android: 21
