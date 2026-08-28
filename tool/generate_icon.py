@@ -1,7 +1,7 @@
 """Generates the app launcher icon assets for flutter_launcher_icons.
 
 Draws a minimalist open book (white) on the Material 3 primary color
-(indigo 0xFF5C6BC0). Outputs two 1024x1024 PNGs:
+(deep indigo 0xFF4A3B76). Outputs two 1024x1024 PNGs:
 
   assets/icon/app_icon.png          full-bleed: indigo background + white book
   assets/icon/foreground_icon.png   transparent background + white book (safe zone)
@@ -15,7 +15,7 @@ import os
 from PIL import Image, ImageDraw
 
 SIZE = 1024
-INDIGO = (0x5C, 0x6B, 0xC0, 255)
+INDIGO = (0x4A, 0x3B, 0x76, 255)
 WHITE = (255, 255, 255, 255)
 
 

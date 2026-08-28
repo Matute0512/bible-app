@@ -55,6 +55,26 @@ class BibleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Warm palette tuned for long reading sessions: deep indigo for wisdom
+    // and calm, amber/gold for accents and verse numbers, soft cream instead
+    // of pure white, and warm charcoal instead of pure black for body text.
+    const seed = Color(0xFF4A3B76); // primary: deep indigo
+    const cream = Color(0xFFF9F7F2); // surface: soft cream
+    const charcoal = Color(0xFF2D2A26); // onSurface: warm charcoal
+
+    final lightScheme = ColorScheme.fromSeed(
+      seedColor: seed,
+      primary: seed,
+      onPrimary: Colors.white,
+      secondary: const Color(0xFFD4A017), // warm amber/gold
+      surface: cream,
+      onSurface: charcoal,
+    );
+    final darkScheme = ColorScheme.fromSeed(
+      seedColor: seed,
+      brightness: Brightness.dark,
+    );
+
     return MaterialApp(
       title: 'Lectura Bíblica Diaria',
       debugShowCheckedModeBanner: false,
@@ -62,13 +82,22 @@ class BibleApp extends StatelessWidget {
       // Follows the device theme (light/dark) automatically.
       themeMode: ThemeMode.system,
       theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF5C6BC0),
+        colorScheme: lightScheme,
         useMaterial3: true,
+        appBarTheme: AppBarTheme(
+          backgroundColor: cream,
+          foregroundColor: charcoal,
+          surfaceTintColor: Colors.transparent,
+        ),
       ),
       darkTheme: ThemeData(
-        colorSchemeSeed: const Color(0xFF5C6BC0),
-        brightness: Brightness.dark,
+        colorScheme: darkScheme,
         useMaterial3: true,
+        appBarTheme: AppBarTheme(
+          backgroundColor: darkScheme.surface,
+          foregroundColor: darkScheme.onSurface,
+          surfaceTintColor: Colors.transparent,
+        ),
       ),
       locale: const Locale('es'),
       supportedLocales: const [Locale('es'), Locale('en')],

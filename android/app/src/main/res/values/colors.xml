@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#5C6BC0</color>
+    <color name="ic_launcher_background">#4A3B76</color>
     <!-- Splash screen background; matches the Material 3 primary color. -->
-    <color name="splash_background">#5C6BC0</color>
+    <color name="splash_background">#4A3B76</color>
 </resources>
