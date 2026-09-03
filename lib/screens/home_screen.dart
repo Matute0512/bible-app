@@ -3,11 +3,17 @@ import 'package:intl/intl.dart';
 
 import '../models/bible_chapter.dart';
 import '../models/user_preferences.dart';
+import '../models/verse.dart';
 import '../services/bible_api_service.dart';
 import '../services/notification_service.dart';
 import '../services/reading_plan_service.dart';
+import '../services/verse_connections_service.dart';
+import '../theme/bible_theme.dart';
+import '../widgets/graph_explorer.dart';
+import '../widgets/verse_shimmer.dart';
 
-/// Main reading screen: shows the chapter of the day and the settings sheet.
+/// Main reading screen: shows the chapter of the day, its curated connection
+/// graph and the settings sheet.
 ///
 /// Text widgets scale with the system text scale factor automatically, so the
 /// biblical text honors the user's accessibility preferences on top of the
@@ -30,8 +36,17 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  /// True only while the very first chapter (or a retry) is being fetched;
+  /// shows the shimmer skeleton.
   bool _loading = true;
+
+  /// True while the user browses from one chapter to another; keeps the
+  /// current chapter visible under a thin progress line until the new one is
+  /// ready, then cross-fades.
+  bool _switching = false;
+
   BibleApiException? _error;
   BibleChapter? _chapter;
 
@@ -45,6 +60,12 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Current position in [_plan] while the user browses chapters.
   int _planIndex = 0;
 
+  /// Drives the subtle staggered fade-in of verses after a chapter arrives.
+  late final AnimationController _entrance = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+  );
+
   @override
   void initState() {
     super.initState();
@@ -53,6 +74,12 @@ class _HomeScreenState extends State<HomeScreen> {
     // installed the app on Android 12 and later upgraded also get the runtime
     // prompt. It is a no-op (no dialog) once the user has already answered.
     _requestNotificationPermission();
+  }
+
+  @override
+  void dispose() {
+    _entrance.dispose();
+    super.dispose();
   }
 
   /// Best-effort runtime permission request; denial never blocks reading.
@@ -73,8 +100,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final plan =
-          await widget.readingPlan.buildPlan(widget.preferences.translation);
+      final plan = await widget.readingPlan.buildPlan(
+        widget.preferences.translation,
+      );
       final elapsed = await widget.readingPlan.daysElapsed();
       final todayIndex = elapsed % plan.length;
 
@@ -85,9 +113,10 @@ class _HomeScreenState extends State<HomeScreen> {
         _plan = plan;
         _todayIndex = todayIndex;
         _planIndex = todayIndex;
+        _loading = false;
       });
 
-      await _fetchChapter();
+      await _fetchChapterAt(_planIndex);
       await _rescheduleNotification();
     } on BibleApiException catch (error) {
       if (!mounted) {
@@ -100,13 +129,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Loads the chapter at [_planIndex] into [_chapter].
-  Future<void> _fetchChapter() async {
+  /// Fetches the chapter at [index] and swaps it in with a fade.
+  Future<void> _fetchChapterAt(int index) async {
     final plan = _plan;
     if (plan == null) {
       return;
     }
-    final entry = plan[_planIndex];
+    final entry = plan[index];
     final chapter = await widget.api.fetchChapter(
       translationId: widget.preferences.translation.translationId,
       bookId: entry.bookId,
@@ -119,29 +148,47 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _chapter = chapter;
       _loading = false;
+      _switching = false;
     });
+    _entrance.forward(from: 0);
   }
 
   /// Moves [delta] steps through the plan (wrapping around at both ends).
   Future<void> _goToChapter(int delta) async {
     final plan = _plan;
-    if (plan == null || _loading) {
+    if (plan == null || _loading || _switching) {
       return;
     }
+    final next = (_planIndex + delta + plan.length) % plan.length;
+    await _goToPlanIndex(next);
+  }
+
+  /// Navigates to the plan entry at [index], keeping the old chapter on screen
+  /// (under a thin progress line) until the new one is ready.
+  Future<void> _goToPlanIndex(int index) async {
+    final plan = _plan;
+    if (plan == null || _loading || _switching) {
+      return;
+    }
+    if (index == _planIndex && _chapter != null) {
+      return;
+    }
+
     setState(() {
-      _loading = true;
+      _switching = true;
       _error = null;
-      _planIndex = (_planIndex + delta + plan.length) % plan.length;
+      _planIndex = index;
     });
+
     try {
-      await _fetchChapter();
+      await _fetchChapterAt(index);
     } on BibleApiException catch (error) {
       if (!mounted) {
         return;
       }
       setState(() {
         _error = error;
-        _loading = false;
+        _switching = false;
       });
     }
   }
@@ -180,10 +227,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return plan[index];
   }
 
+  // ---------------------------------------------------------------------
+  // Actions
+  // ---------------------------------------------------------------------
+
   Future<void> _openSettings() async {
     await showModalBottomSheet<void>(
       context: context,
-      showDragHandle: true,
       isScrollControlled: true,
       builder: (sheetContext) => _SettingsSheet(
         preferences: widget.preferences,
@@ -191,6 +241,52 @@ class _HomeScreenState extends State<HomeScreen> {
         onTimeChanged: _handleTimeChanged,
       ),
     );
+  }
+
+  /// Opens the connection graph centered on the current chapter.
+  Future<void> _openGraphExplorer({int? fromVerse}) async {
+    final chapter = _chapter;
+    if (chapter == null) {
+      return;
+    }
+    final center = PassageRef(
+      bookId: chapter.bookId,
+      bookName: chapter.bookName,
+      chapterNumber: chapter.chapterNumber,
+    );
+    await showGraphExplorer(
+      context: context,
+      center: center,
+      connections: VerseConnectionService.instance.connectionsFor(
+        bookId: chapter.bookId,
+        chapterNumber: chapter.chapterNumber,
+      ),
+      originHint: fromVerse == null ? null : 'desde el versículo $fromVerse',
+      onOpenPassage: _openPassageFromGraph,
+    );
+  }
+
+  /// Called when a node/chip is tapped inside the graph sheet: closes the
+  /// sheet and navigates to the connected passage when it belongs to the plan.
+  void _openPassageFromGraph(PassageRef target) {
+    final plan = _plan;
+    Navigator.of(context).pop();
+    if (plan == null) {
+      return;
+    }
+    final index = plan.indexWhere(
+      (entry) =>
+          entry.bookId == target.bookId &&
+          entry.chapterNumber == target.chapterNumber,
+    );
+    if (index < 0) {
+      _showSnack(
+        success: false,
+        message: 'Este pasaje no está en tu plan actual de lectura',
+      );
+      return;
+    }
+    _goToPlanIndex(index);
   }
 
   Future<void> _handleFontSizeChanged(double value) async {
@@ -203,38 +299,70 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _handleTimeChanged(TimeOfDay time) async {
     await widget.preferences.setNotificationTime(time);
     final scheduled = await _rescheduleNotification();
-
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              scheduled ? Icons.check_circle : Icons.error_outline,
-              color: scheduled ? null : Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                scheduled
-                    ? 'Notificación diaria programada'
-                    : 'No se pudo programar la notificación. Revisá los permisos',
-              ),
-            ),
-          ],
-        ),
-      ),
+    _showSnack(
+      success: scheduled,
+      message: scheduled
+          ? 'Notificación diaria programada'
+          : 'No se pudo programar la notificación. Revisá los permisos',
     );
   }
+
+  /// Shows the elegant floating confirmation/error toast.
+  void _showSnack({required bool success, required String message}) {
+    if (!mounted) {
+      return;
+    }
+    final colorScheme = Theme.of(context).colorScheme;
+    // The check must keep contrast against whichever pill the snack bar theme
+    // paints (dark in light mode, light in dark mode).
+    final onLightPill = colorScheme.inverseSurface.computeLuminance() > 0.5;
+    final checkColor = onLightPill
+        ? const Color(0xFF2E7D32) // deep green on a light pill
+        : const Color(0xFF7CD38B); // light green on a dark pill
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                success ? Icons.check_circle : Icons.error_outline,
+                size: 22,
+                color: success ? checkColor : colorScheme.error,
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Text(message)),
+            ],
+          ),
+        ),
+      );
+  }
+
+  // ---------------------------------------------------------------------
+  // Build
+  // ---------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lectura de Hoy'),
+        centerTitle: true,
         actions: [
+          Semantics(
+            label: 'Ver conexiones de este capítulo',
+            button: true,
+            excludeSemantics: true,
+            child: IconButton(
+              icon: const Icon(Icons.hub_outlined),
+              tooltip: 'Ver conexiones de este capítulo',
+              onPressed: _chapter == null ? null : () => _openGraphExplorer(),
+            ),
+          ),
           Semantics(
             label: 'Abrir configuración',
             button: true,
@@ -253,70 +381,56 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Previous/next chapter controls. Always rendered so the settings and the
-  /// navigation are reachable from any state.
-  Widget _buildChapterNav() {
-    final plan = _plan;
-    final enabled = plan != null && !_loading;
-    final position = plan == null ? null : '${_planIndex + 1}/${plan.length}';
+  Widget _buildBody() {
+    final progressBar = _switching
+        ? const LinearProgressIndicator(minHeight: 2)
+        : const SizedBox.shrink();
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: Semantics(
-                label: 'Capítulo anterior',
-                button: true,
-                excludeSemantics: true,
-                child: OutlinedButton.icon(
-                  onPressed: enabled ? () => _goToChapter(-1) : null,
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Capítulo Anterior'),
-                ),
-              ),
+    return Column(
+      children: [
+        progressBar,
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 260),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: KeyedSubtree(
+              key: ValueKey<String>(_contentKey()),
+              child: _buildCurrentContent(),
             ),
-            if (position != null) ...[
-              const SizedBox(width: 8),
-              Text(
-                position,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-              const SizedBox(width: 8),
-            ],
-            Expanded(
-              child: Semantics(
-                label: 'Capítulo siguiente',
-                button: true,
-                excludeSemantics: true,
-                child: OutlinedButton.icon(
-                  onPressed: enabled ? () => _goToChapter(1) : null,
-                  icon: const Icon(Icons.arrow_forward),
-                  iconAlignment: IconAlignment.end,
-                  label: const Text('Capítulo Siguiente'),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildBody() {
+  /// Stable identity for the animated switcher so chapter changes (and load →
+  /// content) cross-fade instead of cutting over.
+  String _contentKey() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return 'loading';
     }
-    if (_error != null) {
-      return _buildError();
+    final error = _error;
+    if (error != null) {
+      return 'error:${error.message}';
+    }
+    return _chapter?.reference ?? 'loading';
+  }
+
+  Widget _buildCurrentContent() {
+    final error = _error;
+    // A failure always surfaces its retry UI — even when no chapter has been
+    // shown yet (first load) so the user is never stuck on a silent skeleton.
+    if (error != null && !_loading) {
+      return _buildError(error);
+    }
+    if (_loading || _chapter == null) {
+      return const VerseShimmerList();
     }
     return _buildChapter(_chapter!);
   }
 
-  Widget _buildError() {
+  Widget _buildError(BibleApiException error) {
     final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
@@ -333,12 +447,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              _error!.message,
+              error.message,
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
@@ -353,82 +466,336 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildChapter(BibleChapter chapter) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final reading = Theme.of(context).extension<BibleReadingStyle>()!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final hasConnections = VerseConnectionService.instance.hasConnections(
+      bookId: chapter.bookId,
+      chapterNumber: chapter.chapterNumber,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-          child: Semantics(
-            label:
-                'Pasaje bíblico: ${chapter.bookName} capítulo ${chapter.chapterNumber}',
-            excludeSemantics: true,
-            child: Column(
-              children: [
-                Text(
-                  chapter.reference,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _formatToday(),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: colorScheme.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
+        _ChapterHeader(
+          chapter: chapter,
+          dateLabel: _formatToday(),
+          reading: reading,
+          colorScheme: colorScheme,
+          showTapHint: hasConnections,
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+            padding: const EdgeInsets.fromLTRB(24, 6, 24, 40),
             itemCount: chapter.verses.length,
-            itemBuilder: (context, index) {
-              final verse = chapter.verses[index];
-              final baseSize = 18.0 * widget.preferences.fontSizeMultiplier;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${verse.number}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.secondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        verse.text,
-                        style: TextStyle(
-                          // Serif for deep, traditional reading; the base
-                          // 18sp scales with both the font slider and the
-                          // system text scale factor.
-                          fontFamily: 'serif',
-                          fontSize: baseSize,
-                          height: 1.6,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+            itemBuilder: (context, index) => _buildVerse(
+              chapter.verses[index],
+              index,
+              chapter.verses.length,
+            ),
           ),
         ),
       ],
     );
   }
 
-  String _formatToday() =>
-      DateFormat('EEEE d MMMM', 'es').format(DateTime.now());
+  /// One verse row: amber numeral + serif text, with a staggered entrance and
+  /// a tap that opens the passage's connection graph.
+  Widget _buildVerse(Verse verse, int index, int verseCount) {
+    final reading = Theme.of(context).extension<BibleReadingStyle>()!;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return AnimatedBuilder(
+      animation: _entrance,
+      builder: (context, _) {
+        // Each verse occupies a slice of the animation timeline, so the ones
+        // near the top fade in just before those further down the scroll.
+        final span = 0.9;
+        final slice = verseCount > 0 ? span / verseCount : 1.0;
+        final start = index * slice;
+        final local = ((_entrance.value - start) / slice)
+            .clamp(0.0, 1.0)
+            .toDouble();
+        final dy = (1 - local) * 10.0;
+
+        return Opacity(
+          opacity: local,
+          child: Transform.translate(
+            offset: Offset(0, dy),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: Semantics(
+                button: true,
+                label: 'Versículo ${verse.number}. Ver conexiones',
+                hint: 'Abre las referencias relacionadas de este pasaje',
+                excludeSemantics: true,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _openGraphExplorer(fromVerse: verse.number),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Slight upward offset gives the numeral a printed
+                      // "superscript anchor" feel next to the verse text.
+                      Transform.translate(
+                        offset: const Offset(0, -3),
+                        child: Text(
+                          '${verse.number}',
+                          style: reading.verseNumber,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          verse.text,
+                          style: reading
+                              .readingText(
+                                widget.preferences.fontSizeMultiplier,
+                              )
+                              .copyWith(color: colorScheme.onSurface),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Chapter navigation (previous / next)
+  // ---------------------------------------------------------------------
+
+  Widget _buildChapterNav() {
+    final plan = _plan;
+    final enabled =
+        plan != null && !_loading && !_switching && _chapter != null;
+    final position = plan == null
+        ? null
+        : '${_planIndex + 1} de ${plan.length}';
+
+    final container = Container(
+      decoration: BoxDecoration(
+        color: Theme.of(
+          context,
+        ).extension<BibleReadingStyle>()!.navBarBackground,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: _NavAction(
+                icon: Icons.chevron_left,
+                label: 'Anterior',
+                alignment: MainAxisAlignment.start,
+                enabled: enabled,
+                onTap: () => _goToChapter(-1),
+              ),
+            ),
+            if (position != null) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Capítulo',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      position,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            Expanded(
+              child: _NavAction(
+                icon: Icons.chevron_right,
+                label: 'Siguiente',
+                alignment: MainAxisAlignment.end,
+                enabled: enabled,
+                onTap: () => _goToChapter(1),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      child: container,
+    );
+  }
+
+  String _formatToday() {
+    final formatted = DateFormat('EEEE d MMMM', 'es').format(DateTime.now());
+    return formatted[0].toUpperCase() + formatted.substring(1);
+  }
+}
+
+/// Pinned passage heading: large centered serif title, date and a soft amber
+/// hairline, plus a subtle hint that verses are explorable when the chapter
+/// has curated connections.
+class _ChapterHeader extends StatelessWidget {
+  const _ChapterHeader({
+    required this.chapter,
+    required this.dateLabel,
+    required this.reading,
+    required this.colorScheme,
+    required this.showTapHint,
+  });
+
+  final BibleChapter chapter;
+  final String dateLabel;
+  final BibleReadingStyle reading;
+  final ColorScheme colorScheme;
+  final bool showTapHint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
+      child: Semantics(
+        label:
+            'Pasaje bíblico: ${chapter.bookName} capítulo ${chapter.chapterNumber}',
+        excludeSemantics: true,
+        child: Column(
+          children: [
+            Text(
+              chapter.reference,
+              textAlign: TextAlign.center,
+              style: reading.chapterTitle,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              dateLabel,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: 64,
+              height: 2,
+              decoration: BoxDecoration(
+                color: reading.headingDivider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            if (showTapHint) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.touch_app_outlined,
+                    size: 14,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Tocá un versículo para ver sus conexiones',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One half of the floating navigation bar (previous/next).
+class _NavAction extends StatelessWidget {
+  const _NavAction({
+    required this.icon,
+    required this.label,
+    required this.alignment,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final MainAxisAlignment alignment;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final foreground = enabled
+        ? colorScheme.primary
+        : colorScheme.onSurface.withValues(alpha: 0.3);
+
+    final action = Material(
+      color: enabled
+          ? colorScheme.primary.withValues(alpha: 0.08)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          child: Row(
+            mainAxisAlignment: alignment,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 26, color: foreground),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    return Semantics(
+      button: true,
+      label: 'Capítulo $label',
+      enabled: enabled,
+      excludeSemantics: true,
+      child: action,
+    );
+  }
 }
 
 /// Modal bottom sheet with the font-size slider and the notification time.
@@ -478,13 +845,14 @@ class _SettingsSheetState extends State<_SettingsSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
         24,
         0,
         24,
-        MediaQuery.of(context).padding.bottom + 24,
+        MediaQuery.paddingOf(context).bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -494,9 +862,22 @@ class _SettingsSheetState extends State<_SettingsSheet> {
           const SizedBox(height: 24),
 
           Text('Tamaño del texto bíblico', style: theme.textTheme.titleSmall),
+          const SizedBox(height: 4),
           Row(
             children: [
-              const Icon(Icons.text_fields),
+              // Small / large “A” marks the ends of the scale, tinted with the
+              // primary indigo to match the interactive slider.
+              Semantics(
+                label: 'Fuente más pequeña',
+                child: ExcludeSemantics(
+                  child: Text(
+                    'A',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
               Expanded(
                 child: Slider(
                   value: _fontSize,
@@ -507,23 +888,45 @@ class _SettingsSheetState extends State<_SettingsSheet> {
                   onChanged: _onFontSizeChanged,
                 ),
               ),
-              const Icon(Icons.text_fields),
+              Semantics(
+                label: 'Fuente más grande',
+                child: ExcludeSemantics(
+                  child: Text(
+                    'A',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
           Text(
             '${(_fontSize * 100).round()}%',
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.schedule),
-            title: const Text('Hora de la notificación'),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: ReadingPalette.amber.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.notifications_active,
+                size: 22,
+                color: ReadingPalette.amber,
+              ),
+            ),
+            title: const Text('Recordatorio diario'),
             subtitle: Text(widget.preferences.notificationTime.format(context)),
-            trailing: TextButton(
+            trailing: FilledButton.tonal(
               onPressed: _pickTime,
               child: const Text('Cambiar'),
             ),
