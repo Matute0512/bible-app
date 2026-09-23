@@ -70,8 +70,12 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
         chapterNumber: entry.chapterNumber,
       );
 
-      final loadedState = Loaded(plan: plan, currentIndex: todayIndex, chapter: chapter);
-      
+      final loadedState = Loaded(
+        plan: plan,
+        currentIndex: todayIndex,
+        chapter: chapter,
+      );
+
       // Reschedule notification now that we have the plan
       final notificationService = ref.read(notificationServiceProvider);
       if (userPrefs.notificationsEnabled) {
@@ -79,16 +83,18 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
         final nowMinutes = now.hour * 60 + now.minute;
         final reminder = userPrefs.notificationTime;
         final reminderMinutes = reminder.hour * 60 + reminder.minute;
-        
+
         final index = nowMinutes >= reminderMinutes
             ? (todayIndex + 1) % plan.length
             : todayIndex;
-            
+
         final entry = plan[index];
-        notificationService.scheduleDailyNotification(
-          time: userPrefs.notificationTime,
-          passageReference: entry.reference,
-        ).catchError((_) => false); // Ignore errors silently on initial load
+        notificationService
+            .scheduleDailyNotification(
+              time: userPrefs.notificationTime,
+              passageReference: entry.reference,
+            )
+            .catchError((_) => false); // Ignore errors silently on initial load
       }
 
       return loadedState;
@@ -160,11 +166,11 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
       final nowMinutes = now.hour * 60 + now.minute;
       final reminder = userPrefs.notificationTime;
       final reminderMinutes = reminder.hour * 60 + reminder.minute;
-      
+
       final index = nowMinutes >= reminderMinutes
           ? (currentState.currentIndex + 1) % currentState.plan.length
           : currentState.currentIndex;
-          
+
       final entry = currentState.plan[index];
 
       return await notificationService.scheduleDailyNotification(

@@ -12,9 +12,7 @@ Future<void> showGraphExplorer(BuildContext context, {int? fromVerse}) {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (sheetContext) => GraphExplorerWidget(
-      fromVerse: fromVerse,
-    ),
+    builder: (sheetContext) => GraphExplorerWidget(fromVerse: fromVerse),
   );
 }
 
@@ -26,10 +24,7 @@ Future<void> showGraphExplorer(BuildContext context, {int? fromVerse}) {
 /// short note, so the same navigation is reachable both visually and by
 /// screen readers.
 class GraphExplorerWidget extends ConsumerWidget {
-  const GraphExplorerWidget({
-    super.key,
-    this.fromVerse,
-  });
+  const GraphExplorerWidget({super.key, this.fromVerse});
 
   /// Optional verse number where the graph was opened from.
   final int? fromVerse;
@@ -43,20 +38,26 @@ class GraphExplorerWidget extends ConsumerWidget {
     if (state is! Loaded && state is! Navigating) {
       return const SizedBox.shrink();
     }
-    
-    final chapter = state is Loaded ? state.chapter : (state as Navigating).previousChapter;
+
+    final chapter = state is Loaded
+        ? state.chapter
+        : (state as Navigating).previousChapter;
     final center = PassageRef(
       bookId: chapter.bookId,
       bookName: chapter.bookName,
       chapterNumber: chapter.chapterNumber,
     );
-    
-    final connections = ref.watch(verseConnectionsProvider).connectionsFor(
-      bookId: chapter.bookId,
-      chapterNumber: chapter.chapterNumber,
-    );
-    
-    final originHint = fromVerse != null ? 'desde el versículo $fromVerse' : null;
+
+    final connections = ref
+        .watch(verseConnectionsProvider)
+        .connectionsFor(
+          bookId: chapter.bookId,
+          chapterNumber: chapter.chapterNumber,
+        );
+
+    final originHint = fromVerse != null
+        ? 'desde el versículo $fromVerse'
+        : null;
 
     void onOpenPassage(PassageRef target) {
       Navigator.of(context).pop();
@@ -77,14 +78,12 @@ class GraphExplorerWidget extends ConsumerWidget {
             SnackBar(
               content: Row(
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 22,
-                    color: colorScheme.error,
-                  ),
+                  Icon(Icons.error_outline, size: 22, color: colorScheme.error),
                   const SizedBox(width: 12),
                   const Expanded(
-                    child: Text('Este pasaje no está en tu plan actual de lectura'),
+                    child: Text(
+                      'Este pasaje no está en tu plan actual de lectura',
+                    ),
                   ),
                 ],
               ),
@@ -135,7 +134,11 @@ class GraphExplorerWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeading(BuildContext context, PassageRef center, String? originHint) {
+  Widget _buildHeading(
+    BuildContext context,
+    PassageRef center,
+    String? originHint,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

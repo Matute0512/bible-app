@@ -13,7 +13,7 @@ void main() {
   group('UserPreferencesProvider', () {
     test('initializes with default values if no prefs exist', () async {
       SharedPreferences.setMockInitialValues({});
-      
+
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
@@ -27,13 +27,15 @@ void main() {
 
     test('updates font size and persists', () async {
       SharedPreferences.setMockInitialValues({});
-      
+
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
       await container.read(sharedPreferencesProvider.future);
 
-      await container.read(userPreferencesProvider.notifier).setFontSizeMultiplier(1.5);
+      await container
+          .read(userPreferencesProvider.notifier)
+          .setFontSizeMultiplier(1.5);
 
       final prefs = await container.read(userPreferencesProvider.future);
       expect(prefs.fontSizeMultiplier, 1.5);
@@ -45,14 +47,16 @@ void main() {
 
     test('updates notification time and persists', () async {
       SharedPreferences.setMockInitialValues({});
-      
+
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
       await container.read(sharedPreferencesProvider.future);
 
       const newTime = TimeOfDay(hour: 7, minute: 30);
-      await container.read(userPreferencesProvider.notifier).setNotificationTime(newTime);
+      await container
+          .read(userPreferencesProvider.notifier)
+          .setNotificationTime(newTime);
 
       final prefs = await container.read(userPreferencesProvider.future);
       expect(prefs.notificationTime.hour, 7);
@@ -67,18 +71,22 @@ void main() {
 
   group('DailyReadingNotifier', () {
     test('loads initial state correctly', () async {
-      SharedPreferences.setMockInitialValues({'installation_date': DateTime.now().toIso8601String()});
-      
+      SharedPreferences.setMockInitialValues({
+        'installation_date': DateTime.now().toIso8601String(),
+      });
+
       final container = ProviderContainer(
         overrides: [
           apiServiceProvider.overrideWithValue(MockBibleApiService()),
-          notificationServiceProvider.overrideWithValue(MockNotificationService()),
-        ]
+          notificationServiceProvider.overrideWithValue(
+            MockNotificationService(),
+          ),
+        ],
       );
       addTearDown(container.dispose);
 
       await container.read(sharedPreferencesProvider.future);
-      
+
       // Initially loading
       final initial = container.read(dailyReadingProvider);
       expect(initial.isLoading, true);
@@ -86,31 +94,35 @@ void main() {
       // Wait for load
       final state = await container.read(dailyReadingProvider.future);
       expect(state, isA<Loaded>());
-      
+
       final loadedState = state as Loaded;
       expect(loadedState.chapter.reference, 'Génesis 1');
       expect(loadedState.currentIndex, 0);
     });
-    
+
     test('goToChapter navigation works', () async {
-      SharedPreferences.setMockInitialValues({'installation_date': DateTime.now().toIso8601String()});
-      
+      SharedPreferences.setMockInitialValues({
+        'installation_date': DateTime.now().toIso8601String(),
+      });
+
       final container = ProviderContainer(
         overrides: [
           apiServiceProvider.overrideWithValue(MockBibleApiService()),
-          notificationServiceProvider.overrideWithValue(MockNotificationService()),
-        ]
+          notificationServiceProvider.overrideWithValue(
+            MockNotificationService(),
+          ),
+        ],
       );
       addTearDown(container.dispose);
 
       await container.read(sharedPreferencesProvider.future);
       await container.read(dailyReadingProvider.future);
-      
+
       // Navigate forward
       await container.read(dailyReadingProvider.notifier).goToChapter(1);
       final nextState = container.read(dailyReadingProvider).requireValue;
       expect(nextState, isA<Loaded>());
-      
+
       final loadedState = nextState as Loaded;
       expect(loadedState.currentIndex, 1);
     });
@@ -120,14 +132,7 @@ void main() {
 class MockBibleApiService implements BibleApiService {
   @override
   Future<List<BibleBook>> fetchBooks(String translationId) async {
-    return [
-      BibleBook(
-        id: 'GEN',
-        name: 'Génesis',
-        order: 1,
-        chapterCount: 50,
-      )
-    ];
+    return [BibleBook(id: 'GEN', name: 'Génesis', order: 1, chapterCount: 50)];
   }
 
   @override
@@ -152,10 +157,12 @@ class MockNotificationService implements NotificationService {
 
   @override
   Future<void> init() async {}
-  
+
   @override
-  Future<bool> requestPermission() async { return true; }
-  
+  Future<bool> requestPermission() async {
+    return true;
+  }
+
   @override
   Future<bool> scheduleDailyNotification({
     required TimeOfDay time,

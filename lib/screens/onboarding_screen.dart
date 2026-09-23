@@ -38,7 +38,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     await prefsNotifier.setTranslation(_translation);
     await prefsNotifier.setNotificationTime(_time);
-    
+
     // Persists the UTC installation date that anchors the reading plan.
     await readingPlan.getInstallationDate();
 
@@ -55,9 +55,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       return;
     }
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) => const HomeScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
     );
   }
 
@@ -74,26 +72,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              Icon(Icons.menu_book_rounded,
-                  size: 64, color: colorScheme.primary),
+              Icon(
+                Icons.menu_book_rounded,
+                size: 64,
+                color: colorScheme.primary,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Lectura Bíblica Diaria',
                 textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Un capítulo por día, a tu ritmo.',
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 40),
 
-              Text('Elegí tu traducción',
-                  style: theme.textTheme.titleSmall),
+              Text('Elegí tu traducción', style: theme.textTheme.titleSmall),
               const SizedBox(height: 12),
               SegmentedButton<BibleTranslation>(
                 segments: const [
@@ -113,8 +115,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
               const SizedBox(height: 24),
 
-              Text('¿A qué hora querés tu recordatorio?',
-                  style: theme.textTheme.titleSmall),
+              Text(
+                '¿A qué hora querés tu recordatorio?',
+                style: theme.textTheme.titleSmall,
+              ),
               const SizedBox(height: 12),
               Semantics(
                 label:

@@ -67,14 +67,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   /// Opens the connection graph centered on the current chapter.
-  Future<void> _openGraphExplorer(BibleChapter chapter, {int? fromVerse}) async {
-    await showGraphExplorer(
-      context,
-      fromVerse: fromVerse,
-    );
+  Future<void> _openGraphExplorer(
+    BibleChapter chapter, {
+    int? fromVerse,
+  }) async {
+    await showGraphExplorer(context, fromVerse: fromVerse);
   }
-
-
 
   // ---------------------------------------------------------------------
   // Build
@@ -83,12 +81,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final stateAsync = ref.watch(dailyReadingProvider);
-    
+
     // Listen to changes to trigger entrance animation when a new chapter loads
-    ref.listen<AsyncValue<DailyReadingState>>(dailyReadingProvider, (previous, next) {
+    ref.listen<AsyncValue<DailyReadingState>>(dailyReadingProvider, (
+      previous,
+      next,
+    ) {
       next.whenData((state) {
         if (state is Loaded) {
-          final isNew = previous?.value is! Loaded || 
+          final isNew =
+              previous?.value is! Loaded ||
               (previous!.value as Loaded).currentIndex != state.currentIndex;
           if (isNew) {
             _entrance.forward(from: 0);
@@ -100,7 +102,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final state = stateAsync.value;
     final isNavigating = state is Navigating;
     final isLoaded = state is Loaded;
-    final chapter = isLoaded ? state.chapter : (isNavigating ? state.previousChapter : null);
+    final chapter = isLoaded
+        ? state.chapter
+        : (isNavigating ? state.previousChapter : null);
 
     return Scaffold(
       appBar: AppBar(
@@ -114,7 +118,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             child: IconButton(
               icon: const Icon(Icons.hub_outlined),
               tooltip: 'Ver conexiones de este capítulo',
-              onPressed: chapter == null ? null : () => _openGraphExplorer(chapter),
+              onPressed: chapter == null
+                  ? null
+                  : () => _openGraphExplorer(chapter),
             ),
           ),
           Semantics(
@@ -181,20 +187,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget _buildCurrentContent(AsyncValue<DailyReadingState> stateAsync) {
     final state = stateAsync.value;
-    
+
     if (stateAsync.hasError) {
       return _buildError(stateAsync.error.toString());
     }
-    
+
     if (state is DailyReadingError) {
       return _buildError(state.message);
     }
-    
+
     if (state == null || state is LoadingPlan) {
       return const VerseShimmerList();
     }
-    
-    final chapter = state is Loaded ? state.chapter : (state as Navigating).previousChapter;
+
+    final chapter = state is Loaded
+        ? state.chapter
+        : (state as Navigating).previousChapter;
     return _buildChapter(chapter);
   }
 
@@ -236,11 +244,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _buildChapter(BibleChapter chapter) {
     final reading = Theme.of(context).extension<BibleReadingStyle>()!;
     final colorScheme = Theme.of(context).colorScheme;
-    final hasConnections = ref.read(verseConnectionsProvider).hasConnections(
-      bookId: chapter.bookId,
-      chapterNumber: chapter.chapterNumber,
-    );
-    final fontSizeMultiplier = ref.watch(userPreferencesProvider).value?.fontSizeMultiplier ?? 1.0;
+    final hasConnections = ref
+        .read(verseConnectionsProvider)
+        .hasConnections(
+          bookId: chapter.bookId,
+          chapterNumber: chapter.chapterNumber,
+        );
+    final fontSizeMultiplier =
+        ref.watch(userPreferencesProvider).value?.fontSizeMultiplier ?? 1.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -262,8 +273,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               verseCount: chapter.verses.length,
               entranceAnimation: _entrance,
               fontSizeMultiplier: fontSizeMultiplier,
-              onTap: () =>
-                  _openGraphExplorer(chapter, fromVerse: chapter.verses[index].number),
+              onTap: () => _openGraphExplorer(
+                chapter,
+                fromVerse: chapter.verses[index].number,
+              ),
             ),
           ),
         ),
@@ -278,11 +291,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _buildChapterNav(DailyReadingState? state) {
     final isLoaded = state is Loaded;
     final isNavigating = state is Navigating;
-    
-    final List<ReadingPlanEntry>? plan = isLoaded ? state.plan : (isNavigating ? state.plan : null);
+
+    final List<ReadingPlanEntry>? plan = isLoaded
+        ? state.plan
+        : (isNavigating ? state.plan : null);
     final enabled = plan != null && isLoaded;
-    final currentIndex = isLoaded ? state.currentIndex : (isNavigating ? state.targetIndex : null);
-    
+    final currentIndex = isLoaded
+        ? state.currentIndex
+        : (isNavigating ? state.targetIndex : null);
+
     final position = plan == null || currentIndex == null
         ? null
         : '${currentIndex + 1} de ${plan.length}';
@@ -316,7 +333,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 label: 'Anterior',
                 alignment: MainAxisAlignment.start,
                 enabled: enabled,
-                onTap: () => ref.read(dailyReadingProvider.notifier).goToChapter(-1),
+                onTap: () =>
+                    ref.read(dailyReadingProvider.notifier).goToChapter(-1),
               ),
             ),
             if (position != null) ...[
@@ -348,7 +366,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 label: 'Siguiente',
                 alignment: MainAxisAlignment.end,
                 enabled: enabled,
-                onTap: () => ref.read(dailyReadingProvider.notifier).goToChapter(1),
+                onTap: () =>
+                    ref.read(dailyReadingProvider.notifier).goToChapter(1),
               ),
             ),
           ],
@@ -522,7 +541,8 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
   @override
   void initState() {
     super.initState();
-    _fontSize = ref.read(userPreferencesProvider).value?.fontSizeMultiplier ?? 1.0;
+    _fontSize =
+        ref.read(userPreferencesProvider).value?.fontSizeMultiplier ?? 1.0;
   }
 
   void _onFontSizeChanged(double value) {
@@ -531,7 +551,9 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
   }
 
   Future<void> _pickTime() async {
-    final initialTime = ref.read(userPreferencesProvider).value?.notificationTime ?? const TimeOfDay(hour: 8, minute: 0);
+    final initialTime =
+        ref.read(userPreferencesProvider).value?.notificationTime ??
+        const TimeOfDay(hour: 8, minute: 0);
     final picked = await showTimePicker(
       context: context,
       initialTime: initialTime,
@@ -542,11 +564,15 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
     }
     // Close the sheet first so the confirmation SnackBar is visible.
     Navigator.of(context).pop();
-    await ref.read(userPreferencesProvider.notifier).setNotificationTime(picked);
-    
-    final scheduled = await ref.read(dailyReadingProvider.notifier).rescheduleNotification();
+    await ref
+        .read(userPreferencesProvider.notifier)
+        .setNotificationTime(picked);
+
+    final scheduled = await ref
+        .read(dailyReadingProvider.notifier)
+        .rescheduleNotification();
     if (!mounted) return;
-    
+
     final colorScheme = Theme.of(context).colorScheme;
     final onLightPill = colorScheme.inverseSurface.computeLuminance() > 0.5;
     final checkColor = onLightPill

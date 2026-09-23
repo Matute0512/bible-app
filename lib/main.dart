@@ -25,10 +25,7 @@ Future<void> main() async {
   await notificationService.init();
 
   runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const BibleApp(),
-    ),
+    UncontrolledProviderScope(container: container, child: const BibleApp()),
   );
 }
 

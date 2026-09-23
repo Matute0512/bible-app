@@ -162,11 +162,16 @@ class _VerseSkeletonPainter extends CustomPainter {
     canvas.save();
     canvas.clipPath(barsPath);
     final sheen = Paint()
-      ..shader = ui.Gradient.linear(band.centerLeft, band.centerRight, [
-        sheenColor.withValues(alpha: 0),
-        sheenColor,
-        sheenColor.withValues(alpha: 0),
-      ]);
+      ..shader = ui.Gradient.linear(
+        band.centerLeft,
+        band.centerRight,
+        [
+          sheenColor.withValues(alpha: 0),
+          sheenColor,
+          sheenColor.withValues(alpha: 0),
+        ],
+        [0.0, 0.5, 1.0],
+      );
     canvas.drawRect(band, sheen);
     canvas.restore();
   }
