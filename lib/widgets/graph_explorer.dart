@@ -1,31 +1,19 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/app_providers.dart';
 import '../services/verse_connections_service.dart';
 import '../theme/bible_theme.dart';
 
-/// Opens the graph explorer as a modal bottom sheet for [center].
-///
-/// [originHint] is an optional phrase such as "desde el versículo 4" shown
-/// under the heading. [onOpenPassage] lets the caller navigate to a connected
-/// passage (and is responsible for popping the sheet when convenient).
-Future<void> showGraphExplorer({
-  required BuildContext context,
-  required PassageRef center,
-  required List<VerseConnection> connections,
-  required ValueChanged<PassageRef> onOpenPassage,
-  String? originHint,
-}) {
+Future<void> showGraphExplorer(BuildContext context, {int? fromVerse}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (sheetContext) => GraphExplorerWidget(
-      center: center,
-      connections: connections,
-      originHint: originHint,
-      onOpenPassage: onOpenPassage,
+      fromVerse: fromVerse,
     ),
   );
 }
@@ -37,31 +25,73 @@ Future<void> showGraphExplorer({
 /// press. Below the map, each relation is repeated as a chip-style row with a
 /// short note, so the same navigation is reachable both visually and by
 /// screen readers.
-class GraphExplorerWidget extends StatelessWidget {
+class GraphExplorerWidget extends ConsumerWidget {
   const GraphExplorerWidget({
     super.key,
-    required this.center,
-    required this.connections,
-    required this.onOpenPassage,
-    this.originHint,
+    this.fromVerse,
   });
 
-  /// The passage the map is centered on.
-  final PassageRef center;
-
-  /// Curated connections leaving [center], in display order.
-  final List<VerseConnection> connections;
-
-  /// Invoked when the user taps a connected passage.
-  final ValueChanged<PassageRef> onOpenPassage;
-
-  /// Optional heading subtitle (e.g. "desde el versículo 4").
-  final String? originHint;
+  /// Optional verse number where the graph was opened from.
+  final int? fromVerse;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    final state = ref.watch(dailyReadingProvider).value;
+    if (state is! Loaded && state is! Navigating) {
+      return const SizedBox.shrink();
+    }
+    
+    final chapter = state is Loaded ? state.chapter : (state as Navigating).previousChapter;
+    final center = PassageRef(
+      bookId: chapter.bookId,
+      bookName: chapter.bookName,
+      chapterNumber: chapter.chapterNumber,
+    );
+    
+    final connections = ref.watch(verseConnectionsProvider).connectionsFor(
+      bookId: chapter.bookId,
+      chapterNumber: chapter.chapterNumber,
+    );
+    
+    final originHint = fromVerse != null ? 'desde el versículo $fromVerse' : null;
+
+    void onOpenPassage(PassageRef target) {
+      Navigator.of(context).pop();
+      final plan = state is Loaded ? state.plan : (state as Navigating).plan;
+      final index = plan.indexWhere(
+        (entry) =>
+            entry.bookId == target.bookId &&
+            entry.chapterNumber == target.chapterNumber,
+      );
+      if (index >= 0) {
+        ref.read(dailyReadingProvider.notifier).goToPlanIndex(index);
+      } else {
+        final colorScheme = Theme.of(context).colorScheme;
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 22,
+                    color: colorScheme.error,
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text('Este pasaje no está en tu plan actual de lectura'),
+                  ),
+                ],
+              ),
+            ),
+          );
+      }
+    }
 
     return SafeArea(
       top: false,
@@ -71,7 +101,7 @@ class GraphExplorerWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildHeading(context),
+            _buildHeading(context, center, originHint),
             const SizedBox(height: 6),
             if (connections.isEmpty)
               _buildEmptyState(context)
@@ -105,7 +135,7 @@ class GraphExplorerWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildHeading(BuildContext context) {
+  Widget _buildHeading(BuildContext context, PassageRef center, String? originHint) {
     final colorScheme = Theme.of(context).colorScheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,7 +161,7 @@ class GraphExplorerWidget extends StatelessWidget {
               ),
               if (originHint != null)
                 Text(
-                  originHint!,
+                  originHint,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),

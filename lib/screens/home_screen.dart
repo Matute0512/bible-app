@@ -6,7 +6,6 @@ import '../models/bible_chapter.dart';
 
 import '../models/verse.dart';
 import '../services/reading_plan_service.dart';
-import '../services/verse_connections_service.dart';
 import '../theme/bible_theme.dart';
 import '../widgets/graph_explorer.dart';
 import '../widgets/verse_shimmer.dart';
@@ -69,80 +68,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   /// Opens the connection graph centered on the current chapter.
   Future<void> _openGraphExplorer(BibleChapter chapter, {int? fromVerse}) async {
-    final center = PassageRef(
-      bookId: chapter.bookId,
-      bookName: chapter.bookName,
-      chapterNumber: chapter.chapterNumber,
-    );
     await showGraphExplorer(
-      context: context,
-      center: center,
-      connections: ref.read(verseConnectionsProvider).connectionsFor(
-        bookId: chapter.bookId,
-        chapterNumber: chapter.chapterNumber,
-      ),
-      originHint: fromVerse == null ? null : 'desde el versículo $fromVerse',
-      onOpenPassage: _openPassageFromGraph,
+      context,
+      fromVerse: fromVerse,
     );
   }
 
-  /// Called when a node/chip is tapped inside the graph sheet: closes the
-  /// sheet and navigates to the connected passage when it belongs to the plan.
-  void _openPassageFromGraph(PassageRef target) {
-    Navigator.of(context).pop();
-    
-    final state = ref.read(dailyReadingProvider).value;
-    if (state is! Loaded && state is! Navigating) {
-      return;
-    }
-    
-    final plan = state is Loaded ? state.plan : (state as Navigating).plan;
-    final index = plan.indexWhere(
-      (entry) =>
-          entry.bookId == target.bookId &&
-          entry.chapterNumber == target.chapterNumber,
-    );
-    if (index < 0) {
-      _showSnack(
-        success: false,
-        message: 'Este pasaje no está en tu plan actual de lectura',
-      );
-      return;
-    }
-    ref.read(dailyReadingProvider.notifier).goToPlanIndex(index);
-  }
 
-  /// Shows the elegant floating confirmation/error toast.
-  void _showSnack({required bool success, required String message}) {
-    if (!mounted) {
-      return;
-    }
-    final colorScheme = Theme.of(context).colorScheme;
-    // The check must keep contrast against whichever pill the snack bar theme
-    // paints (dark in light mode, light in dark mode).
-    final onLightPill = colorScheme.inverseSurface.computeLuminance() > 0.5;
-    final checkColor = onLightPill
-        ? const Color(0xFF2E7D32) // deep green on a light pill
-        : const Color(0xFF7CD38B); // light green on a dark pill
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                success ? Icons.check_circle : Icons.error_outline,
-                size: 22,
-                color: success ? checkColor : colorScheme.error,
-              ),
-              const SizedBox(width: 12),
-              Expanded(child: Text(message)),
-            ],
-          ),
-        ),
-      );
-  }
 
   // ---------------------------------------------------------------------
   // Build
