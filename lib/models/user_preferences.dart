@@ -16,6 +16,14 @@ enum BibleTranslation {
   };
 }
 
+/// The visual theme mode chosen by the user.
+enum AppThemeMode {
+  system,
+  light,
+  dark,
+  sepia,
+}
+
 /// Persisted user preferences for the app.
 ///
 /// Values are loaded once at startup via [load] and kept in memory while
@@ -25,6 +33,7 @@ class UserPreferences {
   UserPreferences({
     this.fontSizeMultiplier = 1.0,
     this.translation = BibleTranslation.evangelical,
+    this.themeMode = AppThemeMode.system,
     this.notificationsEnabled = true,
     this.notificationHour = 8,
     this.notificationMinute = 0,
@@ -33,14 +42,15 @@ class UserPreferences {
 
   final SharedPreferences prefs;
 
-
-
   /// Scales the base biblical text size (18sp) to respect the user's
   /// preference. 1.0 means the default size.
   final double fontSizeMultiplier;
 
   /// Which canon the reading plan is built from.
   final BibleTranslation translation;
+
+  /// The theme mode chosen by the user.
+  final AppThemeMode themeMode;
 
   /// Master switch for the daily notification reminder.
   final bool notificationsEnabled;
@@ -61,6 +71,7 @@ class UserPreferences {
   UserPreferences copyWith({
     double? fontSizeMultiplier,
     BibleTranslation? translation,
+    AppThemeMode? themeMode,
     bool? notificationsEnabled,
     int? notificationHour,
     int? notificationMinute,
@@ -69,6 +80,7 @@ class UserPreferences {
       prefs: prefs,
       fontSizeMultiplier: fontSizeMultiplier ?? this.fontSizeMultiplier,
       translation: translation ?? this.translation,
+      themeMode: themeMode ?? this.themeMode,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       notificationHour: notificationHour ?? this.notificationHour,
       notificationMinute: notificationMinute ?? this.notificationMinute,

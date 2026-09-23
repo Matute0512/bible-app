@@ -204,9 +204,7 @@ class GraphExplorerWidget extends ConsumerWidget {
   }
 }
 
-/// Radial hub-and-spoke map: [center] in the middle, related passages around
-/// it, edges painted behind the nodes with a [CustomPainter].
-class _GraphCanvas extends StatelessWidget {
+class _GraphCanvas extends StatefulWidget {
   const _GraphCanvas({
     required this.center,
     required this.connections,
@@ -219,9 +217,25 @@ class _GraphCanvas extends StatelessWidget {
   final ColorScheme colorScheme;
   final ValueChanged<PassageRef> onOpenPassage;
 
+  @override
+  State<_GraphCanvas> createState() => _GraphCanvasState();
+}
+
+class _GraphCanvasState extends State<_GraphCanvas> with SingleTickerProviderStateMixin {
+  late final AnimationController _entrance = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 800),
+  )..forward();
+
   static const double _centerWidth = 128;
   static const double _centerHeight = 58;
   static const double _nodeHeight = 48;
+
+  @override
+  void dispose() {
+    _entrance.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -229,16 +243,15 @@ class _GraphCanvas extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final box = math.min(constraints.maxWidth, 380.0);
+        final box = math.min(constraints.maxWidth, 450.0);
         final half = box / 2;
 
-        // Target pills sit on a ring just inside the box edges.
-        final count = connections.length;
-        final radius = (half - _nodeHeight / 2 - 14)
-            .clamp(70.0, half - 34.0)
+        final count = widget.connections.length;
+        final radius = (half - _nodeHeight / 2 - 20)
+            .clamp(90.0, half - 30.0)
             .toDouble();
         final chord = 2 * radius * math.sin(math.pi / count);
-        final nodeWidth = chord.clamp(64.0, 150.0).toDouble();
+        final nodeWidth = chord.clamp(70.0, 160.0).toDouble();
 
         final centerOffset = Offset(half, half);
         final targets = <Offset>[];
@@ -252,57 +265,86 @@ class _GraphCanvas extends StatelessWidget {
           );
         }
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          child: SizedBox(
-            width: box,
-            height: box,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Edges first, so nodes render above the lines.
-                CustomPaint(
+        final graphBox = SizedBox(
+          width: box,
+          height: box,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Edges first
+              FadeTransition(
+                opacity: _entrance,
+                child: CustomPaint(
                   size: Size.square(box),
                   painter: _EdgesPainter(
                     center: centerOffset,
                     targets: targets,
-                    color: colorScheme.primary.withValues(alpha: 0.35),
+                    color: widget.colorScheme.primary.withValues(alpha: 0.35),
                   ),
                 ),
-                // Center node.
-                Positioned(
-                  left: centerOffset.dx - _centerWidth / 2,
-                  top: centerOffset.dy - _centerHeight / 2,
+              ),
+              // Center node
+              Positioned(
+                left: centerOffset.dx - _centerWidth / 2,
+                top: centerOffset.dy - _centerHeight / 2,
+                child: ScaleTransition(
+                  scale: CurvedAnimation(
+                    parent: _entrance,
+                    curve: const Interval(0.0, 0.4, curve: Curves.easeOutBack),
+                  ),
                   child: _Node(
                     width: _centerWidth,
                     height: _centerHeight,
-                    textColor: colorScheme.onPrimary,
-                    fill: colorScheme.primary,
-                    border: colorScheme.primary,
-                    label: center.reference,
-                    semanticsLabel: 'Pasaje actual: ${center.reference}',
+                    textColor: widget.colorScheme.onPrimary,
+                    fill: widget.colorScheme.primary,
+                    border: widget.colorScheme.primary,
+                    label: widget.center.reference,
+                    semanticsLabel: 'Pasaje actual: ${widget.center.reference}',
                     onTap: null,
                   ),
                 ),
-                // Related nodes.
-                for (var i = 0; i < count; i++)
-                  Positioned(
-                    left: targets[i].dx - nodeWidth / 2,
-                    top: targets[i].dy - _nodeHeight / 2,
+              ),
+              // Related nodes
+              for (var i = 0; i < count; i++)
+                Positioned(
+                  left: targets[i].dx - nodeWidth / 2,
+                  top: targets[i].dy - _nodeHeight / 2,
+                  child: ScaleTransition(
+                    scale: CurvedAnimation(
+                      parent: _entrance,
+                      curve: Interval(
+                        0.2 + (i / count) * 0.5,
+                        1.0,
+                        curve: Curves.easeOutBack,
+                      ),
+                    ),
                     child: _Node(
                       width: nodeWidth,
                       height: _nodeHeight,
-                      textColor: colorScheme.onSurface,
+                      textColor: widget.colorScheme.onSurface,
                       fill: reading.chipSurface,
                       border: reading.chipBorder,
-                      label: connections[i].target.reference,
+                      label: widget.connections[i].target.reference,
                       semanticsLabel:
-                          'Ir a ${connections[i].target.reference} · '
-                          '${connections[i].kind.label}',
-                      onTap: () => onOpenPassage(connections[i].target),
+                          'Ir a ${widget.connections[i].target.reference} · '
+                          '${widget.connections[i].kind.label}',
+                      onTap: () => widget.onOpenPassage(widget.connections[i].target),
                     ),
                   ),
-              ],
+                ),
+            ],
+          ),
+        );
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          child: SizedBox(
+            height: box,
+            child: InteractiveViewer(
+              boundaryMargin: const EdgeInsets.all(40),
+              minScale: 0.5,
+              maxScale: 3.0,
+              child: Center(child: graphBox),
             ),
           ),
         );

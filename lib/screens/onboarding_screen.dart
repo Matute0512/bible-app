@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../models/user_preferences.dart';
 import '../providers/app_providers.dart';
@@ -14,9 +15,17 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+  final PageController _pageController = PageController();
   BibleTranslation _translation = BibleTranslation.evangelical;
   TimeOfDay _time = const TimeOfDay(hour: 8, minute: 0);
   bool _starting = false;
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickTime() async {
     final picked = await showTimePicker(
@@ -66,93 +75,162 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              Icon(
-                Icons.menu_book_rounded,
-                size: 64,
-                color: colorScheme.primary,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Lectura Bíblica Diaria',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Un capítulo por día, a tu ritmo.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              Text('Elegí tu traducción', style: theme.textTheme.titleSmall),
-              const SizedBox(height: 12),
-              SegmentedButton<BibleTranslation>(
-                segments: const [
-                  ButtonSegment(
-                    value: BibleTranslation.evangelical,
-                    label: Text('Evangélica'),
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) => setState(() => _currentPage = index),
+                children: [
+                  _buildPage(
+                    title: 'Lectura Bíblica Diaria',
+                    description: 'Un capítulo por día, a tu propio ritmo. Seguí el plan de lectura sin apuros.',
+                    icon: Icons.menu_book_rounded,
+                    colorScheme: colorScheme,
+                    theme: theme,
                   ),
-                  ButtonSegment(
-                    value: BibleTranslation.catholic,
-                    label: Text('Católica'),
+                  _buildPage(
+                    title: 'Conexiones Profundas',
+                    description: 'Explorá relaciones entre pasajes a través del grafo interactivo.',
+                    icon: Icons.hub_outlined,
+                    colorScheme: colorScheme,
+                    theme: theme,
                   ),
+                  _buildSettingsPage(theme, colorScheme),
                 ],
-                selected: {_translation},
-                onSelectionChanged: (selection) {
-                  setState(() => _translation = selection.first);
-                },
               ),
-              const SizedBox(height: 24),
-
-              Text(
-                '¿A qué hora querés tu recordatorio?',
-                style: theme.textTheme.titleSmall,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SmoothPageIndicator(
+                    controller: _pageController,
+                    count: 3,
+                    effect: ExpandingDotsEffect(
+                      activeDotColor: colorScheme.primary,
+                      dotColor: colorScheme.primary.withValues(alpha: 0.2),
+                      dotHeight: 8,
+                      dotWidth: 8,
+                    ),
+                  ),
+                  if (_currentPage == 2)
+                    FilledButton(
+                      onPressed: _starting ? null : _start,
+                      child: _starting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Comenzar'),
+                    )
+                  else
+                    FilledButton.tonal(
+                      onPressed: () {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      child: const Text('Siguiente'),
+                    ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Semantics(
-                label:
-                    'Cambiar la hora del recordatorio. Hora actual: ${_time.format(context)}',
-                button: true,
-                excludeSemantics: true,
-                child: OutlinedButton.icon(
-                  onPressed: _pickTime,
-                  icon: const Icon(Icons.schedule),
-                  label: Text(_time.format(context)),
-                ),
-              ),
-
-              const Spacer(),
-
-              Semantics(
-                label: 'Comenzar a leer el plan de lectura diario',
-                button: true,
-                excludeSemantics: true,
-                child: FilledButton(
-                  onPressed: _starting ? null : _start,
-                  child: _starting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Comenzar'),
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPage({
+    required String title,
+    required String description,
+    required IconData icon,
+    required ColorScheme colorScheme,
+    required ThemeData theme,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 80, color: colorScheme.primary),
+          ),
+          const SizedBox(height: 48),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            description,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsPage(ThemeData theme, ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Personalizá tu experiencia',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 48),
+          Text('Elegí tu traducción', style: theme.textTheme.titleSmall),
+          const SizedBox(height: 12),
+          SegmentedButton<BibleTranslation>(
+            segments: const [
+              ButtonSegment(
+                value: BibleTranslation.evangelical,
+                label: Text('Reina Valera'),
+              ),
+              ButtonSegment(
+                value: BibleTranslation.catholic,
+                label: Text('Latinoamericana'),
+              ),
+            ],
+            selected: {_translation},
+            onSelectionChanged: (selection) {
+              setState(() => _translation = selection.first);
+            },
+          ),
+          const SizedBox(height: 32),
+          Text(
+            '¿A qué hora querés tu recordatorio?',
+            style: theme.textTheme.titleSmall,
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _pickTime,
+            icon: const Icon(Icons.schedule),
+            label: Text(_time.format(context)),
+          ),
+        ],
       ),
     );
   }

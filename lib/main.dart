@@ -4,6 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'providers/app_providers.dart';
+import 'models/user_preferences.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'theme/bible_theme.dart';
@@ -29,19 +30,39 @@ Future<void> main() async {
   );
 }
 
-class BibleApp extends StatelessWidget {
+class BibleApp extends ConsumerWidget {
   const BibleApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prefs = ref.watch(userPreferencesProvider).value;
+    final themeModePreference = prefs?.themeMode ?? AppThemeMode.system;
+
+    ThemeMode themeMode;
+    switch (themeModePreference) {
+      case AppThemeMode.system:
+        themeMode = ThemeMode.system;
+        break;
+      case AppThemeMode.light:
+      case AppThemeMode.sepia:
+        themeMode = ThemeMode.light;
+        break;
+      case AppThemeMode.dark:
+        themeMode = ThemeMode.dark;
+        break;
+    }
+
+    final isSepia = themeModePreference == AppThemeMode.sepia;
+    final lightTheme = _appTheme(Brightness.light, isSepia: isSepia);
+    final darkTheme = _appTheme(Brightness.dark);
+
     return MaterialApp(
       title: 'Lectura Bíblica Diaria',
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
-      // Follows the device theme (light/dark) automatically.
-      themeMode: ThemeMode.system,
-      theme: _appTheme(Brightness.light),
-      darkTheme: _appTheme(Brightness.dark),
+      themeMode: themeMode,
+      theme: lightTheme,
+      darkTheme: darkTheme,
       locale: const Locale('es'),
       supportedLocales: const [Locale('es'), Locale('en')],
       localizationsDelegates: const [
@@ -60,9 +81,11 @@ class BibleApp extends StatelessWidget {
   /// pure white, and warm charcoal instead of pure black for body text. The
   /// reading typography lives in [BibleReadingStyle] so light and dark each
   /// carry their own legible variant.
-  static ThemeData _appTheme(Brightness brightness) {
+  static ThemeData _appTheme(Brightness brightness, {bool isSepia = false}) {
     final isLight = brightness == Brightness.light;
-    final reading = isLight ? BibleReadingStyle.light : BibleReadingStyle.dark;
+    final reading = isLight
+        ? (isSepia ? BibleReadingStyle.sepia : BibleReadingStyle.light)
+        : BibleReadingStyle.dark;
 
     final scheme = ColorScheme.fromSeed(
       seedColor: ReadingPalette.indigo,
@@ -72,7 +95,7 @@ class BibleApp extends StatelessWidget {
       secondary: isLight ? ReadingPalette.amber : ReadingPalette.amberLight,
       surface: reading.readingBackground,
       onSurface: isLight
-          ? ReadingPalette.charcoal
+          ? (isSepia ? ReadingPalette.sepiaText : ReadingPalette.charcoal)
           : ReadingPalette.charcoalPaper,
     );
 
@@ -99,15 +122,17 @@ class BibleApp extends StatelessWidget {
       bottomSheetTheme: BottomSheetThemeData(
         showDragHandle: true,
         modalBackgroundColor: isLight
-            ? ReadingPalette.paper
+            ? (isSepia ? ReadingPalette.sepiaSurface : ReadingPalette.paper)
             : const Color(0xFF211C16),
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
       ),
-      dividerTheme: const DividerThemeData(
-        color: ReadingPalette.amberDivider,
+      dividerTheme: DividerThemeData(
+        color: isSepia
+            ? ReadingPalette.amberDividerSepia
+            : ReadingPalette.amberDivider,
         thickness: 1,
       ),
       sliderTheme: SliderThemeData(

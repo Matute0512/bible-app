@@ -10,6 +10,7 @@ import '../theme/bible_theme.dart';
 import '../widgets/graph_explorer.dart';
 import '../widgets/verse_shimmer.dart';
 import '../providers/app_providers.dart';
+import '../models/user_preferences.dart';
 
 /// Main reading screen: shows the chapter of the day, its curated connection
 /// graph and the settings sheet.
@@ -31,6 +32,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     vsync: this,
     duration: const Duration(milliseconds: 600),
   );
+
+  /// 1 = slide from right (Next), -1 = slide from left (Previous)
+  int _slideDirection = 1;
 
   @override
   void initState() {
@@ -57,6 +61,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   // ---------------------------------------------------------------------
   // Actions
   // ---------------------------------------------------------------------
+
+  void _goToNext() {
+    setState(() => _slideDirection = 1);
+    ref.read(dailyReadingProvider.notifier).goToChapter(1);
+  }
+
+  void _goToPrevious() {
+    setState(() => _slideDirection = -1);
+    ref.read(dailyReadingProvider.notifier).goToChapter(-1);
+  }
 
   Future<void> _openSettings() async {
     await showModalBottomSheet<void>(
@@ -153,13 +167,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       children: [
         progressBar,
         Expanded(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 260),
-            switchInCurve: Curves.easeOut,
-            switchOutCurve: Curves.easeIn,
-            child: KeyedSubtree(
-              key: ValueKey<String>(_contentKey(state)),
-              child: _buildCurrentContent(stateAsync),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onHorizontalDragEnd: (details) {
+              final velocity = details.primaryVelocity ?? 0;
+              if (velocity < -300) {
+                // Swipe left = Next
+                _goToNext();
+              } else if (velocity > 300) {
+                // Swipe right = Previous
+                _goToPrevious();
+              }
+            },
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                final isEntering = child.key == ValueKey<String>(_contentKey(state));
+                final offset = isEntering ? _slideDirection.toDouble() : -_slideDirection.toDouble();
+                return SlideTransition(
+                  position: Tween<Offset>(
+                    begin: Offset(offset, 0.0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey<String>(_contentKey(state)),
+                child: _buildCurrentContent(stateAsync),
+              ),
             ),
           ),
         ),
@@ -333,8 +371,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 label: 'Anterior',
                 alignment: MainAxisAlignment.start,
                 enabled: enabled,
-                onTap: () =>
-                    ref.read(dailyReadingProvider.notifier).goToChapter(-1),
+                onTap: enabled ? _goToPrevious : null,
               ),
             ),
             if (position != null) ...[
@@ -366,8 +403,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 label: 'Siguiente',
                 alignment: MainAxisAlignment.end,
                 enabled: enabled,
-                onTap: () =>
-                    ref.read(dailyReadingProvider.notifier).goToChapter(1),
+                onTap: enabled ? _goToNext : null,
               ),
             ),
           ],
@@ -479,7 +515,7 @@ class _NavAction extends StatelessWidget {
   final String label;
   final MainAxisAlignment alignment;
   final bool enabled;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -609,6 +645,7 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final preferences = ref.watch(userPreferencesProvider).value;
+    final reading = theme.extension<BibleReadingStyle>()!;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -622,80 +659,189 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text('Configuración', style: theme.textTheme.titleLarge),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          _buildCard(
+            context,
+            title: 'Lectura',
+            icon: Icons.text_fields,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Live preview
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: reading.readingBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: reading.headingDivider),
+                  ),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '1 ',
+                          style: reading.verseNumber,
+                        ),
+                        TextSpan(
+                          text: 'En el principio creó Dios los cielos y la tierra.',
+                          style: reading.readingText(_fontSize),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Semantics(
+                      label: 'Fuente más pequeña',
+                      child: ExcludeSemantics(
+                        child: Text('A',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                                color: colorScheme.primary)),
+                      ),
+                    ),
+                    Expanded(
+                      child: Slider(
+                        value: _fontSize,
+                        min: 0.8,
+                        max: 1.5,
+                        divisions: 14,
+                        label: '${(_fontSize * 100).round()}%',
+                        onChanged: _onFontSizeChanged,
+                      ),
+                    ),
+                    Semantics(
+                      label: 'Fuente más grande',
+                      child: ExcludeSemantics(
+                        child: Text('A',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                                color: colorScheme.primary)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SegmentedButton<AppThemeMode>(
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment(
+                        value: AppThemeMode.system,
+                        icon: Icon(Icons.brightness_auto),
+                        label: Text('Auto')),
+                    ButtonSegment(
+                        value: AppThemeMode.light,
+                        icon: Icon(Icons.light_mode),
+                        label: Text('Claro')),
+                    ButtonSegment(
+                        value: AppThemeMode.sepia,
+                        icon: Icon(Icons.menu_book),
+                        label: Text('Sepia')),
+                    ButtonSegment(
+                        value: AppThemeMode.dark,
+                        icon: Icon(Icons.dark_mode),
+                        label: Text('Oscuro')),
+                  ],
+                  selected: {preferences?.themeMode ?? AppThemeMode.system},
+                  onSelectionChanged: (set) {
+                    ref
+                        .read(userPreferencesProvider.notifier)
+                        .setThemeMode(set.first);
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildCard(
+            context,
+            title: 'Traducción',
+            icon: Icons.translate,
+            child: SegmentedButton<BibleTranslation>(
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment(
+                    value: BibleTranslation.evangelical,
+                    label: Text('Reina Valera')),
+                ButtonSegment(
+                    value: BibleTranslation.catholic,
+                    label: Text('Latinoamericana')),
+              ],
+              selected: {
+                preferences?.translation ?? BibleTranslation.evangelical
+              },
+              onSelectionChanged: (set) {
+                ref
+                    .read(userPreferencesProvider.notifier)
+                    .setTranslation(set.first);
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildCard(
+            context,
+            title: 'Recordatorio',
+            icon: Icons.notifications_active,
+            iconColor: ReadingPalette.amber,
+            iconBg: ReadingPalette.amber.withValues(alpha: 0.16),
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Hora del recordatorio'),
+              subtitle:
+                  Text(preferences?.notificationTime.format(context) ?? ''),
+              trailing: FilledButton.tonal(
+                onPressed: _pickTime,
+                child: const Text('Cambiar'),
+              ),
+              onTap: _pickTime,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-          Text('Tamaño del texto bíblico', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 4),
+  Widget _buildCard(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    Color? iconColor,
+    Color? iconBg,
+    required Widget child,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           Row(
             children: [
-              // Small / large “A” marks the ends of the scale, tinted with the
-              // primary indigo to match the interactive slider.
-              Semantics(
-                label: 'Fuente más pequeña',
-                child: ExcludeSemantics(
-                  child: Text(
-                    'A',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: colorScheme.primary,
-                    ),
-                  ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: iconBg ?? colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  size: 18,
+                  color: iconColor ?? colorScheme.primary,
                 ),
               ),
-              Expanded(
-                child: Slider(
-                  value: _fontSize,
-                  min: 0.8,
-                  max: 1.5,
-                  divisions: 14,
-                  label: '${(_fontSize * 100).round()}%',
-                  onChanged: _onFontSizeChanged,
-                ),
-              ),
-              Semantics(
-                label: 'Fuente más grande',
-                child: ExcludeSemantics(
-                  child: Text(
-                    'A',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
+              const SizedBox(width: 12),
+              Text(title,
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w600)),
             ],
           ),
-          Text(
-            '${(_fontSize * 100).round()}%',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: ReadingPalette.amber.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.notifications_active,
-                size: 22,
-                color: ReadingPalette.amber,
-              ),
-            ),
-            title: const Text('Recordatorio diario'),
-            subtitle: Text(preferences?.notificationTime.format(context) ?? ''),
-            trailing: FilledButton.tonal(
-              onPressed: _pickTime,
-              child: const Text('Cambiar'),
-            ),
-            onTap: _pickTime,
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
+          child,
         ],
       ),
     );

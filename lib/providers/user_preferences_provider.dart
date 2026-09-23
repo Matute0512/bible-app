@@ -12,12 +12,19 @@ class UserPreferencesNotifier extends AsyncNotifier<UserPreferences> {
 
     // We can read directly using the logic from UserPreferences.load,
     // or adapt it. For now, since UserPreferences constructor takes prefs:
+    final themeStr = prefs.getString('theme_mode');
+    final themeMode = AppThemeMode.values.firstWhere(
+      (e) => e.name == themeStr,
+      orElse: () => AppThemeMode.system,
+    );
+
     return UserPreferences(
       prefs: prefs,
       fontSizeMultiplier: prefs.getDouble('font_size_multiplier') ?? 1.0,
       translation: prefs.getString('translation') == 'catholic'
           ? BibleTranslation.catholic
           : BibleTranslation.evangelical,
+      themeMode: themeMode,
       notificationsEnabled: prefs.getBool('notifications_enabled') ?? true,
       notificationHour: prefs.getInt('notification_hour') ?? 8,
       notificationMinute: prefs.getInt('notification_minute') ?? 0,
@@ -40,6 +47,12 @@ class UserPreferencesNotifier extends AsyncNotifier<UserPreferences> {
     // Invalidate the reading plan when translation changes.
     ref.invalidate(readingPlanProvider);
     ref.invalidate(dailyReadingProvider);
+  }
+
+  Future<void> setThemeMode(AppThemeMode value) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setString('theme_mode', value.name);
+    state = AsyncData(state.requireValue.copyWith(themeMode: value));
   }
 
   Future<void> setNotificationsEnabled(bool value) async {

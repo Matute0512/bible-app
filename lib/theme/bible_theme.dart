@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Centralized design tokens for the warm, legible "open book" reading
 /// experience.
@@ -37,6 +38,14 @@ abstract final class ReadingPalette {
 
   /// Soft amber hairline visible on dark surfaces (≈40% amber).
   static const Color amberDividerDark = Color(0x66D4A017);
+  /// Sepia reading surface (paper-like).
+  static const Color sepiaSurface = Color(0xFFF4ECD8);
+
+  /// Sepia body text (deep brown/black).
+  static const Color sepiaText = Color(0xFF433422);
+
+  /// Soft amber hairline visible on sepia surfaces.
+  static const Color amberDividerSepia = Color(0x4DD4A017);
 }
 
 /// Typography and surface tokens describing how a chapter is presented.
@@ -87,26 +96,24 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
   /// Scale applied to the whole reading column in the [bodyText].
   static const double baseLineHeight = 1.6;
 
-  static const BibleReadingStyle light = BibleReadingStyle(
+  static final BibleReadingStyle light = BibleReadingStyle(
     readingBackground: ReadingPalette.cream,
     headingDivider: ReadingPalette.amberDivider,
-    navBarBackground: Color(0xF2F9F7F2), // cream at ~95% opacity
-    chipSurface: Color(0x1FD4A017), // amber tint (~12%)
-    chipBorder: Color(0x55D4A017),
-    chapterTitle: TextStyle(
-      fontFamily: 'serif',
+    navBarBackground: const Color(0xF2F9F7F2), // cream at ~95% opacity
+    chipSurface: const Color(0x1FD4A017), // amber tint (~12%)
+    chipBorder: const Color(0x55D4A017),
+    chapterTitle: GoogleFonts.lora(
       fontSize: 27,
       height: 1.25,
       fontWeight: FontWeight.w600,
       color: ReadingPalette.charcoal,
     ),
-    bodyText: TextStyle(
-      fontFamily: 'serif',
+    bodyText: GoogleFonts.lora(
       fontSize: baseBodyFontSize,
       height: baseLineHeight,
       color: ReadingPalette.charcoal,
     ),
-    verseNumber: TextStyle(
+    verseNumber: GoogleFonts.inter(
       fontSize: 14,
       height: 1.0,
       fontWeight: FontWeight.w600,
@@ -114,26 +121,49 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
     ),
   );
 
-  static const BibleReadingStyle dark = BibleReadingStyle(
+  static final BibleReadingStyle sepia = BibleReadingStyle(
+    readingBackground: ReadingPalette.sepiaSurface,
+    headingDivider: ReadingPalette.amberDividerSepia,
+    navBarBackground: const Color(0xF2F4ECD8),
+    chipSurface: const Color(0x22D4A017),
+    chipBorder: const Color(0x55D4A017),
+    chapterTitle: GoogleFonts.lora(
+      fontSize: 27,
+      height: 1.25,
+      fontWeight: FontWeight.w600,
+      color: ReadingPalette.sepiaText,
+    ),
+    bodyText: GoogleFonts.lora(
+      fontSize: baseBodyFontSize,
+      height: baseLineHeight,
+      color: ReadingPalette.sepiaText,
+    ),
+    verseNumber: GoogleFonts.inter(
+      fontSize: 14,
+      height: 1.0,
+      fontWeight: FontWeight.w600,
+      color: ReadingPalette.amber,
+    ),
+  );
+
+  static final BibleReadingStyle dark = BibleReadingStyle(
     readingBackground: ReadingPalette.charcoalSurface,
     headingDivider: ReadingPalette.amberDividerDark,
-    navBarBackground: Color(0xF216130F),
-    chipSurface: Color(0x33D4A017),
-    chipBorder: Color(0x66D4A017),
-    chapterTitle: TextStyle(
-      fontFamily: 'serif',
+    navBarBackground: const Color(0xF216130F),
+    chipSurface: const Color(0x33D4A017),
+    chipBorder: const Color(0x66D4A017),
+    chapterTitle: GoogleFonts.lora(
       fontSize: 27,
       height: 1.25,
       fontWeight: FontWeight.w600,
       color: ReadingPalette.charcoalPaper,
     ),
-    bodyText: TextStyle(
-      fontFamily: 'serif',
+    bodyText: GoogleFonts.lora(
       fontSize: baseBodyFontSize,
       height: baseLineHeight,
       color: ReadingPalette.charcoalPaper,
     ),
-    verseNumber: TextStyle(
+    verseNumber: GoogleFonts.inter(
       fontSize: 14,
       height: 1.0,
       fontWeight: FontWeight.w600,
