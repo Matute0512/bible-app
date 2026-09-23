@@ -611,6 +611,39 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
     // Close the sheet first so the confirmation SnackBar is visible.
     Navigator.of(context).pop();
     await ref.read(userPreferencesProvider.notifier).setNotificationTime(picked);
+    
+    final scheduled = await ref.read(dailyReadingProvider.notifier).rescheduleNotification();
+    if (!mounted) return;
+    
+    final colorScheme = Theme.of(context).colorScheme;
+    final onLightPill = colorScheme.inverseSurface.computeLuminance() > 0.5;
+    final checkColor = onLightPill
+        ? const Color(0xFF2E7D32)
+        : const Color(0xFF7CD38B);
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                scheduled ? Icons.check_circle : Icons.error_outline,
+                size: 22,
+                color: scheduled ? checkColor : colorScheme.error,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  scheduled
+                      ? 'Notificación diaria programada'
+                      : 'No se pudo programar la notificación. Revisá los permisos',
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
   }
 
   @override

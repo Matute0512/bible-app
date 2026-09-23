@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/bible_chapter.dart';
 import '../services/reading_plan_service.dart';
 import 'bible_api_provider.dart';
+import 'notification_provider.dart';
 import 'shared_preferences_provider.dart';
 import 'user_preferences_provider.dart';
 
@@ -69,7 +70,28 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
         chapterNumber: entry.chapterNumber,
       );
 
-      return Loaded(plan: plan, currentIndex: todayIndex, chapter: chapter);
+      final loadedState = Loaded(plan: plan, currentIndex: todayIndex, chapter: chapter);
+      
+      // Reschedule notification now that we have the plan
+      final notificationService = ref.read(notificationServiceProvider);
+      if (userPrefs.notificationsEnabled) {
+        final now = DateTime.now();
+        final nowMinutes = now.hour * 60 + now.minute;
+        final reminder = userPrefs.notificationTime;
+        final reminderMinutes = reminder.hour * 60 + reminder.minute;
+        
+        final index = nowMinutes >= reminderMinutes
+            ? (todayIndex + 1) % plan.length
+            : todayIndex;
+            
+        final entry = plan[index];
+        notificationService.scheduleDailyNotification(
+          time: userPrefs.notificationTime,
+          passageReference: entry.reference,
+        ).catchError((_) => false); // Ignore errors silently on initial load
+      }
+
+      return loadedState;
     } catch (e) {
       return DailyReadingError(message: e.toString());
     }
@@ -119,6 +141,38 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
       );
     } catch (e) {
       state = AsyncData(DailyReadingError(message: e.toString()));
+    }
+  }
+
+  Future<bool> rescheduleNotification() async {
+    final currentState = state.value;
+    if (currentState is! Loaded) return false;
+
+    final userPrefs = await ref.read(userPreferencesProvider.future);
+    final notificationService = ref.read(notificationServiceProvider);
+
+    if (!userPrefs.notificationsEnabled) {
+      return false;
+    }
+
+    try {
+      final now = DateTime.now();
+      final nowMinutes = now.hour * 60 + now.minute;
+      final reminder = userPrefs.notificationTime;
+      final reminderMinutes = reminder.hour * 60 + reminder.minute;
+      
+      final index = nowMinutes >= reminderMinutes
+          ? (currentState.currentIndex + 1) % currentState.plan.length
+          : currentState.currentIndex;
+          
+      final entry = currentState.plan[index];
+
+      return await notificationService.scheduleDailyNotification(
+        time: userPrefs.notificationTime,
+        passageReference: entry.reference,
+      );
+    } catch (e) {
+      return false;
     }
   }
 }
