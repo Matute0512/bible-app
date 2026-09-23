@@ -27,7 +27,7 @@ class UserPreferencesNotifier extends AsyncNotifier<UserPreferences> {
   Future<void> setFontSizeMultiplier(double value) async {
     final prefs = await ref.read(sharedPreferencesProvider.future);
     await prefs.setDouble('font_size_multiplier', value);
-    state = AsyncData(state.requireValue..fontSizeMultiplier = value);
+    state = AsyncData(state.requireValue.copyWith(fontSizeMultiplier: value));
   }
 
   Future<void> setTranslation(BibleTranslation value) async {
@@ -36,7 +36,7 @@ class UserPreferencesNotifier extends AsyncNotifier<UserPreferences> {
       'translation',
       value == BibleTranslation.catholic ? 'catholic' : 'evangelical',
     );
-    state = AsyncData(state.requireValue..translation = value);
+    state = AsyncData(state.requireValue.copyWith(translation: value));
     // Invalidate the reading plan when translation changes.
     ref.invalidate(readingPlanProvider);
     ref.invalidate(dailyReadingProvider);
@@ -45,7 +45,7 @@ class UserPreferencesNotifier extends AsyncNotifier<UserPreferences> {
   Future<void> setNotificationsEnabled(bool value) async {
     final prefs = await ref.read(sharedPreferencesProvider.future);
     await prefs.setBool('notifications_enabled', value);
-    state = AsyncData(state.requireValue..notificationsEnabled = value);
+    state = AsyncData(state.requireValue.copyWith(notificationsEnabled: value));
   }
 
   Future<void> setNotificationTime(TimeOfDay value) async {
@@ -53,9 +53,10 @@ class UserPreferencesNotifier extends AsyncNotifier<UserPreferences> {
     await prefs.setInt('notification_hour', value.hour);
     await prefs.setInt('notification_minute', value.minute);
     state = AsyncData(
-      state.requireValue
-        ..notificationHour = value.hour
-        ..notificationMinute = value.minute,
+      state.requireValue.copyWith(
+        notificationHour: value.hour,
+        notificationMinute: value.minute,
+      ),
     );
   }
 }
