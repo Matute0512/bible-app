@@ -11,9 +11,9 @@ enum BibleTranslation {
 
   /// The translation id understood by the Free Use Bible API.
   String get translationId => switch (this) {
-        BibleTranslation.evangelical => 'spa_rvg',
-        BibleTranslation.catholic => 'spa_blm',
-      };
+    BibleTranslation.evangelical => 'spa_rvg',
+    BibleTranslation.catholic => 'spa_blm',
+  };
 }
 
 /// Persisted user preferences for the app.
@@ -28,7 +28,10 @@ class UserPreferences {
     this.notificationsEnabled = true,
     this.notificationHour = 8,
     this.notificationMinute = 0,
+    required this.prefs,
   });
+
+  final SharedPreferences prefs;
 
   static const String _fontSizeKey = 'font_size_multiplier';
   static const String _translationKey = 'translation';
@@ -63,6 +66,7 @@ class UserPreferences {
   static Future<UserPreferences> load() async {
     final prefs = await SharedPreferences.getInstance();
     return UserPreferences(
+      prefs: prefs,
       fontSizeMultiplier: prefs.getDouble(_fontSizeKey) ?? 1.0,
       translation: prefs.getString(_translationKey) == 'catholic'
           ? BibleTranslation.catholic
@@ -76,13 +80,12 @@ class UserPreferences {
   /// Persists [fontSizeMultiplier].
   Future<void> setFontSizeMultiplier(double value) async {
     fontSizeMultiplier = value;
-    await _writeDouble(_fontSizeKey, value);
+    await prefs.setDouble(_fontSizeKey, value);
   }
 
   /// Persists [translation].
   Future<void> setTranslation(BibleTranslation value) async {
     translation = value;
-    final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
       _translationKey,
       value == BibleTranslation.catholic ? 'catholic' : 'evangelical',
@@ -92,25 +95,14 @@ class UserPreferences {
   /// Persists the notification enablement switch.
   Future<void> setNotificationsEnabled(bool value) async {
     notificationsEnabled = value;
-    await _writeBool(_notificationsEnabledKey, value);
+    await prefs.setBool(_notificationsEnabledKey, value);
   }
 
   /// Persists the notification time.
   Future<void> setNotificationTime(TimeOfDay value) async {
     notificationHour = value.hour;
     notificationMinute = value.minute;
-    final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_notificationHourKey, value.hour);
     await prefs.setInt(_notificationMinuteKey, value.minute);
-  }
-
-  Future<void> _writeDouble(String key, double value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(key, value);
-  }
-
-  Future<void> _writeBool(String key, bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(key, value);
   }
 }

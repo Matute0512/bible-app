@@ -156,7 +156,7 @@ class BibleApp extends StatelessWidget {
 }
 
 /// Decides between Onboarding (first run) and Home (returning user).
-class StartupGate extends StatefulWidget {
+class StartupGate extends StatelessWidget {
   const StartupGate({
     super.key,
     required this.preferences,
@@ -171,44 +171,30 @@ class StartupGate extends StatefulWidget {
   final NotificationService notificationService;
 
   @override
-  State<StartupGate> createState() => _StartupGateState();
-}
-
-class _StartupGateState extends State<StartupGate> {
-  bool? _onboardingCompleted;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkOnboarding();
-  }
-
-  Future<void> _checkOnboarding() async {
-    final completed = await widget.readingPlan.hasInstallationDate();
-    if (!mounted) {
-      return;
-    }
-    setState(() => _onboardingCompleted = completed);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_onboardingCompleted == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    if (_onboardingCompleted!) {
-      return HomeScreen(
-        preferences: widget.preferences,
-        api: widget.api,
-        readingPlan: widget.readingPlan,
-        notificationService: widget.notificationService,
-      );
-    }
-    return OnboardingScreen(
-      preferences: widget.preferences,
-      api: widget.api,
-      readingPlan: widget.readingPlan,
-      notificationService: widget.notificationService,
+    return FutureBuilder<bool>(
+      future: readingPlan.hasInstallationDate(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.data!) {
+          return HomeScreen(
+            preferences: preferences,
+            api: api,
+            readingPlan: readingPlan,
+            notificationService: notificationService,
+          );
+        }
+        return OnboardingScreen(
+          preferences: preferences,
+          api: api,
+          readingPlan: readingPlan,
+          notificationService: notificationService,
+        );
+      },
     );
   }
 }

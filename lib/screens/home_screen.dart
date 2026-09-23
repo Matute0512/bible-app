@@ -487,81 +487,18 @@ class _HomeScreenState extends State<HomeScreen>
           child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(24, 6, 24, 40),
             itemCount: chapter.verses.length,
-            itemBuilder: (context, index) => _buildVerse(
-              chapter.verses[index],
-              index,
-              chapter.verses.length,
+            itemBuilder: (context, index) => VerseListItem(
+              verse: chapter.verses[index],
+              index: index,
+              verseCount: chapter.verses.length,
+              entranceAnimation: _entrance,
+              fontSizeMultiplier: widget.preferences.fontSizeMultiplier,
+              onTap: () =>
+                  _openGraphExplorer(fromVerse: chapter.verses[index].number),
             ),
           ),
         ),
       ],
-    );
-  }
-
-  /// One verse row: amber numeral + serif text, with a staggered entrance and
-  /// a tap that opens the passage's connection graph.
-  Widget _buildVerse(Verse verse, int index, int verseCount) {
-    final reading = Theme.of(context).extension<BibleReadingStyle>()!;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return AnimatedBuilder(
-      animation: _entrance,
-      builder: (context, _) {
-        // Each verse occupies a slice of the animation timeline, so the ones
-        // near the top fade in just before those further down the scroll.
-        final span = 0.9;
-        final slice = verseCount > 0 ? span / verseCount : 1.0;
-        final start = index * slice;
-        final local = ((_entrance.value - start) / slice)
-            .clamp(0.0, 1.0)
-            .toDouble();
-        final dy = (1 - local) * 10.0;
-
-        return Opacity(
-          opacity: local,
-          child: Transform.translate(
-            offset: Offset(0, dy),
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 18),
-              child: Semantics(
-                button: true,
-                label: 'Versículo ${verse.number}. Ver conexiones',
-                hint: 'Abre las referencias relacionadas de este pasaje',
-                excludeSemantics: true,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => _openGraphExplorer(fromVerse: verse.number),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Slight upward offset gives the numeral a printed
-                      // "superscript anchor" feel next to the verse text.
-                      Transform.translate(
-                        offset: const Offset(0, -3),
-                        child: Text(
-                          '${verse.number}',
-                          style: reading.verseNumber,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          verse.text,
-                          style: reading
-                              .readingText(
-                                widget.preferences.fontSizeMultiplier,
-                              )
-                              .copyWith(color: colorScheme.onSurface),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -935,6 +872,89 @@ class _SettingsSheetState extends State<_SettingsSheet> {
           const SizedBox(height: 8),
         ],
       ),
+    );
+  }
+}
+
+class VerseListItem extends StatelessWidget {
+  const VerseListItem({
+    super.key,
+    required this.verse,
+    required this.index,
+    required this.verseCount,
+    required this.entranceAnimation,
+    required this.fontSizeMultiplier,
+    required this.onTap,
+  });
+
+  final Verse verse;
+  final int index;
+  final int verseCount;
+  final Animation<double> entranceAnimation;
+  final double fontSizeMultiplier;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final reading = Theme.of(context).extension<BibleReadingStyle>()!;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return AnimatedBuilder(
+      animation: entranceAnimation,
+      builder: (context, _) {
+        // Each verse occupies a slice of the animation timeline, so the ones
+        // near the top fade in just before those further down the scroll.
+        final span = 0.9;
+        final slice = verseCount > 0 ? span / verseCount : 1.0;
+        final start = index * slice;
+        final local = ((entranceAnimation.value - start) / slice)
+            .clamp(0.0, 1.0)
+            .toDouble();
+        final dy = (1 - local) * 10.0;
+
+        return Opacity(
+          opacity: local,
+          child: Transform.translate(
+            offset: Offset(0, dy),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: Semantics(
+                button: true,
+                label: 'Versículo ${verse.number}. Ver conexiones',
+                hint: 'Abre las referencias relacionadas de este pasaje',
+                excludeSemantics: true,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onTap,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Slight upward offset gives the numeral a printed
+                      // "superscript anchor" feel next to the verse text.
+                      Transform.translate(
+                        offset: const Offset(0, -3),
+                        child: Text(
+                          '${verse.number}',
+                          style: reading.verseNumber,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          verse.text,
+                          style: reading
+                              .readingText(fontSizeMultiplier)
+                              .copyWith(color: colorScheme.onSurface),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
