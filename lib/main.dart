@@ -148,12 +148,7 @@ class StartupGate extends ConsumerWidget {
           );
         }
         if (snapshot.data!) {
-          return HomeScreen(
-            preferences: ref.watch(userPreferencesProvider).requireValue,
-            api: ref.watch(apiServiceProvider),
-            readingPlan: readingPlan,
-            notificationService: ref.watch(notificationServiceProvider),
-          );
+          return const HomeScreen();
         }
         return const OnboardingScreen();
       },

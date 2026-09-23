@@ -56,12 +56,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) => HomeScreen(
-          preferences: ref.read(userPreferencesProvider).requireValue,
-          api: ref.read(apiServiceProvider),
-          readingPlan: ref.read(readingPlanProvider),
-          notificationService: ref.read(notificationServiceProvider),
-        ),
+        builder: (_) => const HomeScreen(),
       ),
     );
   }

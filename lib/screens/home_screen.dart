@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../models/bible_chapter.dart';
-import '../models/user_preferences.dart';
+
 import '../models/verse.dart';
-import '../services/bible_api_service.dart';
-import '../services/notification_service.dart';
 import '../services/reading_plan_service.dart';
 import '../services/verse_connections_service.dart';
 import '../theme/bible_theme.dart';
 import '../widgets/graph_explorer.dart';
 import '../widgets/verse_shimmer.dart';
+import '../providers/app_providers.dart';
 
 /// Main reading screen: shows the chapter of the day, its curated connection
 /// graph and the settings sheet.
@@ -18,48 +18,15 @@ import '../widgets/verse_shimmer.dart';
 /// Text widgets scale with the system text scale factor automatically, so the
 /// biblical text honors the user's accessibility preferences on top of the
 /// manual font-size slider.
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({
-    super.key,
-    required this.preferences,
-    required this.api,
-    required this.readingPlan,
-    required this.notificationService,
-  });
-
-  final UserPreferences preferences;
-  final BibleApiService api;
-  final ReadingPlanService readingPlan;
-  final NotificationService notificationService;
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
+class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
-  /// True only while the very first chapter (or a retry) is being fetched;
-  /// shows the shimmer skeleton.
-  bool _loading = true;
-
-  /// True while the user browses from one chapter to another; keeps the
-  /// current chapter visible under a thin progress line until the new one is
-  /// ready, then cross-fades.
-  bool _switching = false;
-
-  BibleApiException? _error;
-  BibleChapter? _chapter;
-
-  /// Full reading plan, built once at load so chapter navigation is instant.
-  List<ReadingPlanEntry>? _plan;
-
-  /// Index in [_plan] the daily reading is anchored to (derived from the
-  /// installation date). Manual navigation does not move it.
-  int _todayIndex = 0;
-
-  /// Current position in [_plan] while the user browses chapters.
-  int _planIndex = 0;
-
   /// Drives the subtle staggered fade-in of verses after a chapter arrives.
   late final AnimationController _entrance = AnimationController(
     vsync: this,
@@ -69,10 +36,6 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    _load();
-    // Ask for the Android 13+ notification permission here too, so users who
-    // installed the app on Android 12 and later upgraded also get the runtime
-    // prompt. It is a no-op (no dialog) once the user has already answered.
     _requestNotificationPermission();
   }
 
@@ -85,146 +48,11 @@ class _HomeScreenState extends State<HomeScreen>
   /// Best-effort runtime permission request; denial never blocks reading.
   Future<void> _requestNotificationPermission() async {
     try {
-      await widget.notificationService.requestPermission();
+      final service = ref.read(notificationServiceProvider);
+      await service.requestPermission();
     } on Exception {
       // Permission denial is non-fatal.
     }
-  }
-
-  /// Builds the plan, anchors [todayIndex]/[_planIndex] to today, loads the
-  /// chapter and re-arms the daily reminder. Errors reuse the retry UI.
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
-    try {
-      final plan = await widget.readingPlan.buildPlan(
-        widget.preferences.translation,
-      );
-      final elapsed = await widget.readingPlan.daysElapsed();
-      final todayIndex = elapsed % plan.length;
-
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _plan = plan;
-        _todayIndex = todayIndex;
-        _planIndex = todayIndex;
-        _loading = false;
-      });
-
-      await _fetchChapterAt(_planIndex);
-      await _rescheduleNotification();
-    } on BibleApiException catch (error) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _error = error;
-        _loading = false;
-      });
-    }
-  }
-
-  /// Fetches the chapter at [index] and swaps it in with a fade.
-  Future<void> _fetchChapterAt(int index) async {
-    final plan = _plan;
-    if (plan == null) {
-      return;
-    }
-    final entry = plan[index];
-    final chapter = await widget.api.fetchChapter(
-      translationId: widget.preferences.translation.translationId,
-      bookId: entry.bookId,
-      bookName: entry.bookName,
-      chapterNumber: entry.chapterNumber,
-    );
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      _chapter = chapter;
-      _loading = false;
-      _switching = false;
-    });
-    _entrance.forward(from: 0);
-  }
-
-  /// Moves [delta] steps through the plan (wrapping around at both ends).
-  Future<void> _goToChapter(int delta) async {
-    final plan = _plan;
-    if (plan == null || _loading || _switching) {
-      return;
-    }
-    final next = (_planIndex + delta + plan.length) % plan.length;
-    await _goToPlanIndex(next);
-  }
-
-  /// Navigates to the plan entry at [index], keeping the old chapter on screen
-  /// (under a thin progress line) until the new one is ready.
-  Future<void> _goToPlanIndex(int index) async {
-    final plan = _plan;
-    if (plan == null || _loading || _switching) {
-      return;
-    }
-    if (index == _planIndex && _chapter != null) {
-      return;
-    }
-
-    setState(() {
-      _switching = true;
-      _error = null;
-      _planIndex = index;
-    });
-
-    try {
-      await _fetchChapterAt(index);
-    } on BibleApiException catch (error) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _error = error;
-        _switching = false;
-      });
-    }
-  }
-
-  /// Re-arms the daily notification with the passage the user will see when it
-  /// fires: today's chapter when the reminder still fires today, tomorrow's
-  /// when today's reminder already passed. Always anchored to the daily
-  /// [_todayIndex], regardless of manual navigation. Best-effort: failures
-  /// must never block the reading. Returns whether scheduling succeeded.
-  Future<bool> _rescheduleNotification() async {
-    final plan = _plan;
-    if (!widget.preferences.notificationsEnabled || plan == null) {
-      return false;
-    }
-    try {
-      return await widget.notificationService.scheduleDailyNotification(
-        time: widget.preferences.notificationTime,
-        passageReference: _entryForNextReminder(plan).reference,
-      );
-    } on Exception catch (error) {
-      debugPrint('[notifications] Scheduling failed: $error');
-      return false;
-    }
-  }
-
-  /// The chapter the daily reminder should advertise, based on whether the
-  /// reminder time still falls later today or already passed.
-  ReadingPlanEntry _entryForNextReminder(List<ReadingPlanEntry> plan) {
-    final now = TimeOfDay.now();
-    final reminder = widget.preferences.notificationTime;
-    final nowMinutes = now.hour * 60 + now.minute;
-    final reminderMinutes = reminder.hour * 60 + reminder.minute;
-    final index = nowMinutes >= reminderMinutes
-        ? (_todayIndex + 1) % plan.length
-        : _todayIndex;
-    return plan[index];
   }
 
   // ---------------------------------------------------------------------
@@ -235,20 +63,12 @@ class _HomeScreenState extends State<HomeScreen>
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (sheetContext) => _SettingsSheet(
-        preferences: widget.preferences,
-        onFontSizeChanged: _handleFontSizeChanged,
-        onTimeChanged: _handleTimeChanged,
-      ),
+      builder: (sheetContext) => const _SettingsSheet(),
     );
   }
 
   /// Opens the connection graph centered on the current chapter.
-  Future<void> _openGraphExplorer({int? fromVerse}) async {
-    final chapter = _chapter;
-    if (chapter == null) {
-      return;
-    }
+  Future<void> _openGraphExplorer(BibleChapter chapter, {int? fromVerse}) async {
     final center = PassageRef(
       bookId: chapter.bookId,
       bookName: chapter.bookName,
@@ -257,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen>
     await showGraphExplorer(
       context: context,
       center: center,
-      connections: VerseConnectionService.instance.connectionsFor(
+      connections: ref.read(verseConnectionsProvider).connectionsFor(
         bookId: chapter.bookId,
         chapterNumber: chapter.chapterNumber,
       ),
@@ -269,11 +89,14 @@ class _HomeScreenState extends State<HomeScreen>
   /// Called when a node/chip is tapped inside the graph sheet: closes the
   /// sheet and navigates to the connected passage when it belongs to the plan.
   void _openPassageFromGraph(PassageRef target) {
-    final plan = _plan;
     Navigator.of(context).pop();
-    if (plan == null) {
+    
+    final state = ref.read(dailyReadingProvider).value;
+    if (state is! Loaded && state is! Navigating) {
       return;
     }
+    
+    final plan = state is Loaded ? state.plan : (state as Navigating).plan;
     final index = plan.indexWhere(
       (entry) =>
           entry.bookId == target.bookId &&
@@ -286,28 +109,7 @@ class _HomeScreenState extends State<HomeScreen>
       );
       return;
     }
-    _goToPlanIndex(index);
-  }
-
-  Future<void> _handleFontSizeChanged(double value) async {
-    await widget.preferences.setFontSizeMultiplier(value);
-    if (mounted) {
-      setState(() {}); // Rebuild the verses with the new size.
-    }
-  }
-
-  Future<void> _handleTimeChanged(TimeOfDay time) async {
-    await widget.preferences.setNotificationTime(time);
-    final scheduled = await _rescheduleNotification();
-    if (!mounted) {
-      return;
-    }
-    _showSnack(
-      success: scheduled,
-      message: scheduled
-          ? 'Notificación diaria programada'
-          : 'No se pudo programar la notificación. Revisá los permisos',
-    );
+    ref.read(dailyReadingProvider.notifier).goToPlanIndex(index);
   }
 
   /// Shows the elegant floating confirmation/error toast.
@@ -348,6 +150,26 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final stateAsync = ref.watch(dailyReadingProvider);
+    
+    // Listen to changes to trigger entrance animation when a new chapter loads
+    ref.listen<AsyncValue<DailyReadingState>>(dailyReadingProvider, (previous, next) {
+      next.whenData((state) {
+        if (state is Loaded) {
+          final isNew = previous?.value is! Loaded || 
+              (previous!.value as Loaded).currentIndex != state.currentIndex;
+          if (isNew) {
+            _entrance.forward(from: 0);
+          }
+        }
+      });
+    });
+
+    final state = stateAsync.value;
+    final isNavigating = state is Navigating;
+    final isLoaded = state is Loaded;
+    final chapter = isLoaded ? state.chapter : (isNavigating ? state.previousChapter : null);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lectura de Hoy'),
@@ -360,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen>
             child: IconButton(
               icon: const Icon(Icons.hub_outlined),
               tooltip: 'Ver conexiones de este capítulo',
-              onPressed: _chapter == null ? null : () => _openGraphExplorer(),
+              onPressed: chapter == null ? null : () => _openGraphExplorer(chapter),
             ),
           ),
           Semantics(
@@ -376,13 +198,16 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
       // The chapter navigation stays visible even while a new chapter loads.
-      bottomNavigationBar: _buildChapterNav(),
-      body: _buildBody(),
+      bottomNavigationBar: _buildChapterNav(state),
+      body: _buildBody(stateAsync),
     );
   }
 
-  Widget _buildBody() {
-    final progressBar = _switching
+  Widget _buildBody(AsyncValue<DailyReadingState> stateAsync) {
+    final state = stateAsync.value;
+    final isNavigating = state is Navigating;
+
+    final progressBar = isNavigating
         ? const LinearProgressIndicator(minHeight: 2)
         : const SizedBox.shrink();
 
@@ -395,8 +220,8 @@ class _HomeScreenState extends State<HomeScreen>
             switchInCurve: Curves.easeOut,
             switchOutCurve: Curves.easeIn,
             child: KeyedSubtree(
-              key: ValueKey<String>(_contentKey()),
-              child: _buildCurrentContent(),
+              key: ValueKey<String>(_contentKey(state)),
+              child: _buildCurrentContent(stateAsync),
             ),
           ),
         ),
@@ -406,31 +231,42 @@ class _HomeScreenState extends State<HomeScreen>
 
   /// Stable identity for the animated switcher so chapter changes (and load →
   /// content) cross-fade instead of cutting over.
-  String _contentKey() {
-    if (_loading) {
+  String _contentKey(DailyReadingState? state) {
+    if (state == null || state is LoadingPlan) {
       return 'loading';
     }
-    final error = _error;
-    if (error != null) {
-      return 'error:${error.message}';
+    if (state is DailyReadingError) {
+      return 'error:${state.message}';
     }
-    return _chapter?.reference ?? 'loading';
+    if (state is Loaded) {
+      return state.chapter.reference;
+    }
+    if (state is Navigating) {
+      return state.previousChapter.reference;
+    }
+    return 'loading';
   }
 
-  Widget _buildCurrentContent() {
-    final error = _error;
-    // A failure always surfaces its retry UI — even when no chapter has been
-    // shown yet (first load) so the user is never stuck on a silent skeleton.
-    if (error != null && !_loading) {
-      return _buildError(error);
+  Widget _buildCurrentContent(AsyncValue<DailyReadingState> stateAsync) {
+    final state = stateAsync.value;
+    
+    if (stateAsync.hasError) {
+      return _buildError(stateAsync.error.toString());
     }
-    if (_loading || _chapter == null) {
+    
+    if (state is DailyReadingError) {
+      return _buildError(state.message);
+    }
+    
+    if (state == null || state is LoadingPlan) {
       return const VerseShimmerList();
     }
-    return _buildChapter(_chapter!);
+    
+    final chapter = state is Loaded ? state.chapter : (state as Navigating).previousChapter;
+    return _buildChapter(chapter);
   }
 
-  Widget _buildError(BibleApiException error) {
+  Widget _buildError(String message) {
     final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
@@ -447,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             const SizedBox(height: 4),
             Text(
-              error.message,
+              message,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
@@ -455,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: _load,
+              onPressed: () => ref.invalidate(dailyReadingProvider),
               icon: const Icon(Icons.refresh),
               label: const Text('Reintentar'),
             ),
@@ -468,10 +304,11 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildChapter(BibleChapter chapter) {
     final reading = Theme.of(context).extension<BibleReadingStyle>()!;
     final colorScheme = Theme.of(context).colorScheme;
-    final hasConnections = VerseConnectionService.instance.hasConnections(
+    final hasConnections = ref.read(verseConnectionsProvider).hasConnections(
       bookId: chapter.bookId,
       chapterNumber: chapter.chapterNumber,
     );
+    final fontSizeMultiplier = ref.watch(userPreferencesProvider).value?.fontSizeMultiplier ?? 1.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -492,9 +329,9 @@ class _HomeScreenState extends State<HomeScreen>
               index: index,
               verseCount: chapter.verses.length,
               entranceAnimation: _entrance,
-              fontSizeMultiplier: widget.preferences.fontSizeMultiplier,
+              fontSizeMultiplier: fontSizeMultiplier,
               onTap: () =>
-                  _openGraphExplorer(fromVerse: chapter.verses[index].number),
+                  _openGraphExplorer(chapter, fromVerse: chapter.verses[index].number),
             ),
           ),
         ),
@@ -506,13 +343,17 @@ class _HomeScreenState extends State<HomeScreen>
   // Chapter navigation (previous / next)
   // ---------------------------------------------------------------------
 
-  Widget _buildChapterNav() {
-    final plan = _plan;
-    final enabled =
-        plan != null && !_loading && !_switching && _chapter != null;
-    final position = plan == null
+  Widget _buildChapterNav(DailyReadingState? state) {
+    final isLoaded = state is Loaded;
+    final isNavigating = state is Navigating;
+    
+    final List<ReadingPlanEntry>? plan = isLoaded ? state.plan : (isNavigating ? state.plan : null);
+    final enabled = plan != null && isLoaded;
+    final currentIndex = isLoaded ? state.currentIndex : (isNavigating ? state.targetIndex : null);
+    
+    final position = plan == null || currentIndex == null
         ? null
-        : '${_planIndex + 1} de ${plan.length}';
+        : '${currentIndex + 1} de ${plan.length}';
 
     final container = Container(
       decoration: BoxDecoration(
@@ -543,7 +384,7 @@ class _HomeScreenState extends State<HomeScreen>
                 label: 'Anterior',
                 alignment: MainAxisAlignment.start,
                 enabled: enabled,
-                onTap: () => _goToChapter(-1),
+                onTap: () => ref.read(dailyReadingProvider.notifier).goToChapter(-1),
               ),
             ),
             if (position != null) ...[
@@ -575,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen>
                 label: 'Siguiente',
                 alignment: MainAxisAlignment.end,
                 enabled: enabled,
-                onTap: () => _goToChapter(1),
+                onTap: () => ref.read(dailyReadingProvider.notifier).goToChapter(1),
               ),
             ),
           ],
@@ -736,39 +577,32 @@ class _NavAction extends StatelessWidget {
 }
 
 /// Modal bottom sheet with the font-size slider and the notification time.
-class _SettingsSheet extends StatefulWidget {
-  const _SettingsSheet({
-    required this.preferences,
-    required this.onFontSizeChanged,
-    required this.onTimeChanged,
-  });
-
-  final UserPreferences preferences;
-  final ValueChanged<double> onFontSizeChanged;
-  final ValueChanged<TimeOfDay> onTimeChanged;
+class _SettingsSheet extends ConsumerStatefulWidget {
+  const _SettingsSheet();
 
   @override
-  State<_SettingsSheet> createState() => _SettingsSheetState();
+  ConsumerState<_SettingsSheet> createState() => _SettingsSheetState();
 }
 
-class _SettingsSheetState extends State<_SettingsSheet> {
+class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
   late double _fontSize;
 
   @override
   void initState() {
     super.initState();
-    _fontSize = widget.preferences.fontSizeMultiplier;
+    _fontSize = ref.read(userPreferencesProvider).value?.fontSizeMultiplier ?? 1.0;
   }
 
   void _onFontSizeChanged(double value) {
     setState(() => _fontSize = value);
-    widget.onFontSizeChanged(value);
+    ref.read(userPreferencesProvider.notifier).setFontSizeMultiplier(value);
   }
 
   Future<void> _pickTime() async {
+    final initialTime = ref.read(userPreferencesProvider).value?.notificationTime ?? const TimeOfDay(hour: 8, minute: 0);
     final picked = await showTimePicker(
       context: context,
-      initialTime: widget.preferences.notificationTime,
+      initialTime: initialTime,
       helpText: 'Elegí la hora del recordatorio',
     );
     if (picked == null || !mounted) {
@@ -776,13 +610,14 @@ class _SettingsSheetState extends State<_SettingsSheet> {
     }
     // Close the sheet first so the confirmation SnackBar is visible.
     Navigator.of(context).pop();
-    widget.onTimeChanged(picked);
+    await ref.read(userPreferencesProvider.notifier).setNotificationTime(picked);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final preferences = ref.watch(userPreferencesProvider).value;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -862,7 +697,7 @@ class _SettingsSheetState extends State<_SettingsSheet> {
               ),
             ),
             title: const Text('Recordatorio diario'),
-            subtitle: Text(widget.preferences.notificationTime.format(context)),
+            subtitle: Text(preferences?.notificationTime.format(context) ?? ''),
             trailing: FilledButton.tonal(
               onPressed: _pickTime,
               child: const Text('Cambiar'),
