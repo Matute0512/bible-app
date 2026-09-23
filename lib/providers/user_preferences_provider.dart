@@ -9,8 +9,8 @@ class UserPreferencesNotifier extends AsyncNotifier<UserPreferences> {
   @override
   Future<UserPreferences> build() async {
     final prefs = await ref.watch(sharedPreferencesProvider.future);
-    
-    // We can read directly using the logic from UserPreferences.load, 
+
+    // We can read directly using the logic from UserPreferences.load,
     // or adapt it. For now, since UserPreferences constructor takes prefs:
     return UserPreferences(
       prefs: prefs,
@@ -52,13 +52,15 @@ class UserPreferencesNotifier extends AsyncNotifier<UserPreferences> {
     final prefs = await ref.read(sharedPreferencesProvider.future);
     await prefs.setInt('notification_hour', value.hour);
     await prefs.setInt('notification_minute', value.minute);
-    state = AsyncData(state.requireValue
-      ..notificationHour = value.hour
-      ..notificationMinute = value.minute);
+    state = AsyncData(
+      state.requireValue
+        ..notificationHour = value.hour
+        ..notificationMinute = value.minute,
+    );
   }
 }
 
 final userPreferencesProvider =
     AsyncNotifierProvider<UserPreferencesNotifier, UserPreferences>(
-  UserPreferencesNotifier.new,
-);
+      UserPreferencesNotifier.new,
+    );

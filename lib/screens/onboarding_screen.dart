@@ -1,31 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/user_preferences.dart';
-import '../services/bible_api_service.dart';
-import '../services/notification_service.dart';
-import '../services/reading_plan_service.dart';
+import '../providers/app_providers.dart';
 import 'home_screen.dart';
 
 /// First-run flow: pick a translation and a reminder time, then start reading.
-class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({
-    super.key,
-    required this.preferences,
-    required this.api,
-    required this.readingPlan,
-    required this.notificationService,
-  });
-
-  final UserPreferences preferences;
-  final BibleApiService api;
-  final ReadingPlanService readingPlan;
-  final NotificationService notificationService;
+class OnboardingScreen extends ConsumerStatefulWidget {
+  const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   BibleTranslation _translation = BibleTranslation.evangelical;
   TimeOfDay _time = const TimeOfDay(hour: 8, minute: 0);
   bool _starting = false;
@@ -44,15 +32,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _start() async {
     setState(() => _starting = true);
 
-    await widget.preferences.setTranslation(_translation);
-    await widget.preferences.setNotificationTime(_time);
+    final prefsNotifier = ref.read(userPreferencesProvider.notifier);
+    final readingPlan = ref.read(readingPlanProvider);
+    final notificationService = ref.read(notificationServiceProvider);
+
+    await prefsNotifier.setTranslation(_translation);
+    await prefsNotifier.setNotificationTime(_time);
+    
     // Persists the UTC installation date that anchors the reading plan.
-    await widget.readingPlan.getInstallationDate();
+    await readingPlan.getInstallationDate();
 
     // Best-effort: denial of the notification permission must not block
     // onboarding (the user can re-enable it later).
     try {
-      final granted = await widget.notificationService.requestPermission();
+      final granted = await notificationService.requestPermission();
       debugPrint('[notifications] Onboarding: permission $granted');
     } on Exception catch (error) {
       debugPrint('[notifications] Permission request failed: $error');
@@ -64,10 +57,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
         builder: (_) => HomeScreen(
-          preferences: widget.preferences,
-          api: widget.api,
-          readingPlan: widget.readingPlan,
-          notificationService: widget.notificationService,
+          preferences: ref.read(userPreferencesProvider).requireValue,
+          api: ref.read(apiServiceProvider),
+          readingPlan: ref.read(readingPlanProvider),
+          notificationService: ref.read(notificationServiceProvider),
         ),
       ),
     );

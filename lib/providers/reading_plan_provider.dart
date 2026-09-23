@@ -79,7 +79,9 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
     final currentState = state.value;
     if (currentState is! Loaded) return;
 
-    final nextIndex = (currentState.currentIndex + delta + currentState.plan.length) % currentState.plan.length;
+    final nextIndex =
+        (currentState.currentIndex + delta + currentState.plan.length) %
+        currentState.plan.length;
     await goToPlanIndex(nextIndex);
   }
 
@@ -88,17 +90,19 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
     if (currentState is! Loaded) return;
 
     // Emit navigating state
-    state = AsyncData(Navigating(
-      previousChapter: currentState.chapter,
-      targetIndex: index,
-      plan: currentState.plan,
-    ));
+    state = AsyncData(
+      Navigating(
+        previousChapter: currentState.chapter,
+        targetIndex: index,
+        plan: currentState.plan,
+      ),
+    );
 
     try {
       final entry = currentState.plan[index];
       final userPrefs = await ref.read(userPreferencesProvider.future);
       final apiService = ref.read(apiServiceProvider);
-      
+
       final newChapter = await apiService.fetchChapter(
         translationId: userPrefs.translationId,
         bookId: entry.bookId,
@@ -106,11 +110,13 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
         chapterNumber: entry.chapterNumber,
       );
 
-      state = AsyncData(Loaded(
-        plan: currentState.plan,
-        currentIndex: index,
-        chapter: newChapter,
-      ));
+      state = AsyncData(
+        Loaded(
+          plan: currentState.plan,
+          currentIndex: index,
+          chapter: newChapter,
+        ),
+      );
     } catch (e) {
       state = AsyncData(DailyReadingError(message: e.toString()));
     }
@@ -119,5 +125,5 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
 
 final dailyReadingProvider =
     AsyncNotifierProvider<DailyReadingNotifier, DailyReadingState>(
-  DailyReadingNotifier.new,
-);
+      DailyReadingNotifier.new,
+    );

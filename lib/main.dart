@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'models/user_preferences.dart';
+import 'providers/app_providers.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
-import 'services/bible_api_service.dart';
-import 'services/notification_service.dart';
-import 'services/reading_plan_service.dart';
 import 'theme/bible_theme.dart';
 
 /// Global navigator key so the notification tap handler can route back to the
@@ -20,39 +17,23 @@ Future<void> main() async {
   // Loads Spanish date patterns for the `intl` formatters used in the UI.
   await initializeDateFormatting('es');
 
-  final prefs = await SharedPreferences.getInstance();
-  final api = BibleApiService();
-  final readingPlan = ReadingPlanService(api: api, prefs: prefs);
-  final notificationService = NotificationService(
-    onNotificationTap: () {
-      navigatorKey.currentState?.popUntil((route) => route.isFirst);
-    },
-  );
+  final container = ProviderContainer();
+  // Wait for SharedPreferences to be ready within the Riverpod scope
+  await container.read(sharedPreferencesProvider.future);
+
+  final notificationService = container.read(notificationServiceProvider);
   await notificationService.init();
 
   runApp(
-    BibleApp(
-      preferences: await UserPreferences.load(),
-      api: api,
-      readingPlan: readingPlan,
-      notificationService: notificationService,
+    UncontrolledProviderScope(
+      container: container,
+      child: const BibleApp(),
     ),
   );
 }
 
 class BibleApp extends StatelessWidget {
-  const BibleApp({
-    super.key,
-    required this.preferences,
-    required this.api,
-    required this.readingPlan,
-    required this.notificationService,
-  });
-
-  final UserPreferences preferences;
-  final BibleApiService api;
-  final ReadingPlanService readingPlan;
-  final NotificationService notificationService;
+  const BibleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -71,12 +52,7 @@ class BibleApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: StartupGate(
-        preferences: preferences,
-        api: api,
-        readingPlan: readingPlan,
-        notificationService: notificationService,
-      ),
+      home: const StartupGate(),
     );
   }
 
@@ -156,22 +132,13 @@ class BibleApp extends StatelessWidget {
 }
 
 /// Decides between Onboarding (first run) and Home (returning user).
-class StartupGate extends StatelessWidget {
-  const StartupGate({
-    super.key,
-    required this.preferences,
-    required this.api,
-    required this.readingPlan,
-    required this.notificationService,
-  });
-
-  final UserPreferences preferences;
-  final BibleApiService api;
-  final ReadingPlanService readingPlan;
-  final NotificationService notificationService;
+class StartupGate extends ConsumerWidget {
+  const StartupGate({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final readingPlan = ref.watch(readingPlanProvider);
+
     return FutureBuilder<bool>(
       future: readingPlan.hasInstallationDate(),
       builder: (context, snapshot) {
@@ -182,18 +149,13 @@ class StartupGate extends StatelessWidget {
         }
         if (snapshot.data!) {
           return HomeScreen(
-            preferences: preferences,
-            api: api,
+            preferences: ref.watch(userPreferencesProvider).requireValue,
+            api: ref.watch(apiServiceProvider),
             readingPlan: readingPlan,
-            notificationService: notificationService,
+            notificationService: ref.watch(notificationServiceProvider),
           );
         }
-        return OnboardingScreen(
-          preferences: preferences,
-          api: api,
-          readingPlan: readingPlan,
-          notificationService: notificationService,
-        );
+        return const OnboardingScreen();
       },
     );
   }
