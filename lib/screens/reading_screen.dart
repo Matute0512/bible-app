@@ -18,14 +18,14 @@ import '../models/user_preferences.dart';
 /// Text widgets scale with the system text scale factor automatically, so the
 /// biblical text honors the user's accessibility preferences on top of the
 /// manual font-size slider.
-class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+class ReadingScreen extends ConsumerStatefulWidget {
+  const ReadingScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<ReadingScreen> createState() => _ReadingScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen>
+class _ReadingScreenState extends ConsumerState<ReadingScreen>
     with SingleTickerProviderStateMixin {
   /// Drives the subtle staggered fade-in of verses after a chapter arrives.
   late final AnimationController _entrance = AnimationController(
@@ -76,7 +76,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (sheetContext) => const _SettingsSheet(),
+      builder: (sheetContext) => const SettingsSheet(),
     );
   }
 
@@ -184,8 +184,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
               transitionBuilder: (child, animation) {
-                final isEntering = child.key == ValueKey<String>(_contentKey(state));
-                final offset = isEntering ? _slideDirection.toDouble() : -_slideDirection.toDouble();
+                final isEntering =
+                    child.key == ValueKey<String>(_contentKey(state));
+                final offset = isEntering
+                    ? _slideDirection.toDouble()
+                    : -_slideDirection.toDouble();
                 return SlideTransition(
                   position: Tween<Offset>(
                     begin: Offset(offset, 0.0),
@@ -217,6 +220,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (state is Loaded) {
       return state.chapter.reference;
     }
+    if (state is FreeReadingLoaded) {
+      return state.chapter.reference;
+    }
     if (state is Navigating) {
       return state.previousChapter.reference;
     }
@@ -238,10 +244,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       return const VerseShimmerList();
     }
 
-    final chapter = state is Loaded
-        ? state.chapter
-        : (state as Navigating).previousChapter;
-    return _buildChapter(chapter);
+    BibleChapter chapter;
+    if (state is Loaded) {
+      chapter = state.chapter;
+    } else if (state is FreeReadingLoaded) {
+      chapter = state.chapter;
+    } else if (state is Navigating) {
+      chapter = state.previousChapter;
+    } else {
+      return const VerseShimmerList();
+    }
+
+    return _buildChapter(chapter, state);
   }
 
   Widget _buildError(String message) {
@@ -279,7 +293,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildChapter(BibleChapter chapter) {
+  Widget _buildChapter(BibleChapter chapter, DailyReadingState state) {
     final reading = Theme.of(context).extension<BibleReadingStyle>()!;
     final colorScheme = Theme.of(context).colorScheme;
     final hasConnections = ref
@@ -296,7 +310,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       children: [
         _ChapterHeader(
           chapter: chapter,
-          dateLabel: _formatToday(),
+          dateLabel: (state is FreeReadingLoaded)
+              ? 'Lectura Libre'
+              : _formatToday(),
           reading: reading,
           colorScheme: colorScheme,
           showTapHint: hasConnections,
@@ -327,6 +343,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   // ---------------------------------------------------------------------
 
   Widget _buildChapterNav(DailyReadingState? state) {
+    if (state is FreeReadingLoaded) return const SizedBox.shrink();
+
     final isLoaded = state is Loaded;
     final isNavigating = state is Navigating;
 
@@ -564,14 +582,14 @@ class _NavAction extends StatelessWidget {
 }
 
 /// Modal bottom sheet with the font-size slider and the notification time.
-class _SettingsSheet extends ConsumerStatefulWidget {
-  const _SettingsSheet();
+class SettingsSheet extends ConsumerStatefulWidget {
+  const SettingsSheet({super.key});
 
   @override
-  ConsumerState<_SettingsSheet> createState() => _SettingsSheetState();
+  ConsumerState<SettingsSheet> createState() => _SettingsSheetState();
 }
 
-class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
+class _SettingsSheetState extends ConsumerState<SettingsSheet> {
   late double _fontSize;
 
   @override
@@ -678,12 +696,10 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
                   child: RichText(
                     text: TextSpan(
                       children: [
+                        TextSpan(text: '1 ', style: reading.verseNumber),
                         TextSpan(
-                          text: '1 ',
-                          style: reading.verseNumber,
-                        ),
-                        TextSpan(
-                          text: 'En el principio creó Dios los cielos y la tierra.',
+                          text:
+                              'En el principio creó Dios los cielos y la tierra.',
                           style: reading.readingText(_fontSize),
                         ),
                       ],
@@ -696,9 +712,12 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
                     Semantics(
                       label: 'Fuente más pequeña',
                       child: ExcludeSemantics(
-                        child: Text('A',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                                color: colorScheme.primary)),
+                        child: Text(
+                          'A',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: colorScheme.primary,
+                          ),
+                        ),
                       ),
                     ),
                     Expanded(
@@ -714,40 +733,50 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
                     Semantics(
                       label: 'Fuente más grande',
                       child: ExcludeSemantics(
-                        child: Text('A',
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                                color: colorScheme.primary)),
+                        child: Text(
+                          'A',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: colorScheme.primary,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                SegmentedButton<AppThemeMode>(
-                  showSelectedIcon: false,
-                  segments: const [
-                    ButtonSegment(
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: SegmentedButton<AppThemeMode>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment(
                         value: AppThemeMode.system,
                         icon: Icon(Icons.brightness_auto),
-                        label: Text('Auto')),
-                    ButtonSegment(
+                        label: Text('Auto'),
+                      ),
+                      ButtonSegment(
                         value: AppThemeMode.light,
                         icon: Icon(Icons.light_mode),
-                        label: Text('Claro')),
-                    ButtonSegment(
+                        label: Text('Claro'),
+                      ),
+                      ButtonSegment(
                         value: AppThemeMode.sepia,
                         icon: Icon(Icons.menu_book),
-                        label: Text('Sepia')),
-                    ButtonSegment(
+                        label: Text('Sepia'),
+                      ),
+                      ButtonSegment(
                         value: AppThemeMode.dark,
                         icon: Icon(Icons.dark_mode),
-                        label: Text('Oscuro')),
-                  ],
-                  selected: {preferences?.themeMode ?? AppThemeMode.system},
-                  onSelectionChanged: (set) {
-                    ref
-                        .read(userPreferencesProvider.notifier)
-                        .setThemeMode(set.first);
-                  },
+                        label: Text('Oscuro'),
+                      ),
+                    ],
+                    selected: {preferences?.themeMode ?? AppThemeMode.system},
+                    onSelectionChanged: (set) {
+                      ref
+                          .read(userPreferencesProvider.notifier)
+                          .setThemeMode(set.first);
+                    },
+                  ),
                 ),
               ],
             ),
@@ -757,24 +786,29 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
             context,
             title: 'Traducción',
             icon: Icons.translate,
-            child: SegmentedButton<BibleTranslation>(
-              showSelectedIcon: false,
-              segments: const [
-                ButtonSegment(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: SegmentedButton<BibleTranslation>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(
                     value: BibleTranslation.evangelical,
-                    label: Text('Reina Valera')),
-                ButtonSegment(
+                    label: Text('Reina Valera'),
+                  ),
+                  ButtonSegment(
                     value: BibleTranslation.catholic,
-                    label: Text('Latinoamericana')),
-              ],
-              selected: {
-                preferences?.translation ?? BibleTranslation.evangelical
-              },
-              onSelectionChanged: (set) {
-                ref
-                    .read(userPreferencesProvider.notifier)
-                    .setTranslation(set.first);
-              },
+                    label: Text('Latinoamericana'),
+                  ),
+                ],
+                selected: {
+                  preferences?.translation ?? BibleTranslation.evangelical,
+                },
+                onSelectionChanged: (set) {
+                  ref
+                      .read(userPreferencesProvider.notifier)
+                      .setTranslation(set.first);
+                },
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -787,8 +821,9 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
             child: ListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Hora del recordatorio'),
-              subtitle:
-                  Text(preferences?.notificationTime.format(context) ?? ''),
+              subtitle: Text(
+                preferences?.notificationTime.format(context) ?? '',
+              ),
               trailing: FilledButton.tonal(
                 onPressed: _pickTime,
                 child: const Text('Cambiar'),
@@ -835,9 +870,12 @@ class _SettingsSheetState extends ConsumerState<_SettingsSheet> {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(title,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
