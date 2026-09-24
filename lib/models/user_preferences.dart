@@ -17,12 +17,7 @@ enum BibleTranslation {
 }
 
 /// The visual theme mode chosen by the user.
-enum AppThemeMode {
-  system,
-  light,
-  dark,
-  sepia,
-}
+enum AppThemeMode { system, light, dark, sepia }
 
 /// Persisted user preferences for the app.
 ///

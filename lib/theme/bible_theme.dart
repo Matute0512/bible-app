@@ -38,6 +38,7 @@ abstract final class ReadingPalette {
 
   /// Soft amber hairline visible on dark surfaces (≈40% amber).
   static const Color amberDividerDark = Color(0x66D4A017);
+
   /// Sepia reading surface (paper-like).
   static const Color sepiaSurface = Color(0xFFF4ECD8);
 
