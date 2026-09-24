@@ -4,7 +4,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../models/user_preferences.dart';
 import '../providers/app_providers.dart';
-import 'home_screen.dart';
+import 'reading_screen.dart';
 
 /// First-run flow: pick a translation and a reminder time, then start reading.
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -64,7 +64,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       return;
     }
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+      MaterialPageRoute<void>(builder: (_) => const ReadingScreen()),
     );
   }
 
@@ -84,14 +84,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   _buildPage(
                     title: 'Lectura Bíblica Diaria',
-                    description: 'Un capítulo por día, a tu propio ritmo. Seguí el plan de lectura sin apuros.',
+                    description:
+                        'Un capítulo por día, a tu propio ritmo. Seguí el plan de lectura sin apuros.',
                     icon: Icons.menu_book_rounded,
                     colorScheme: colorScheme,
                     theme: theme,
                   ),
                   _buildPage(
                     title: 'Conexiones Profundas',
-                    description: 'Explorá relaciones entre pasajes a través del grafo interactivo.',
+                    description:
+                        'Explorá relaciones entre pasajes a través del grafo interactivo.',
                     icon: Icons.hub_outlined,
                     colorScheme: colorScheme,
                     theme: theme,
@@ -203,21 +205,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           const SizedBox(height: 48),
           Text('Elegí tu traducción', style: theme.textTheme.titleSmall),
           const SizedBox(height: 12),
-          SegmentedButton<BibleTranslation>(
-            segments: const [
-              ButtonSegment(
-                value: BibleTranslation.evangelical,
-                label: Text('Reina Valera'),
-              ),
-              ButtonSegment(
-                value: BibleTranslation.catholic,
-                label: Text('Latinoamericana'),
-              ),
-            ],
-            selected: {_translation},
-            onSelectionChanged: (selection) {
-              setState(() => _translation = selection.first);
-            },
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: SegmentedButton<BibleTranslation>(
+              segments: const [
+                ButtonSegment(
+                  value: BibleTranslation.evangelical,
+                  label: Text('Reina Valera'),
+                ),
+                ButtonSegment(
+                  value: BibleTranslation.catholic,
+                  label: Text('Latinoamericana'),
+                ),
+              ],
+              selected: {_translation},
+              onSelectionChanged: (selection) {
+                setState(() => _translation = selection.first);
+              },
+            ),
           ),
           const SizedBox(height: 32),
           Text(
