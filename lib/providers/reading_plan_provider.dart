@@ -28,16 +28,18 @@ class Loaded extends DailyReadingState {
   final BibleChapter chapter;
 }
 
+class FreeReadingLoaded extends DailyReadingState {
+  FreeReadingLoaded({required this.chapter});
+
+  final BibleChapter chapter;
+}
+
 class Navigating extends DailyReadingState {
-  Navigating({
-    required this.previousChapter,
-    required this.targetIndex,
-    required this.plan,
-  });
+  Navigating({required this.previousChapter, this.targetIndex, this.plan});
 
   final BibleChapter previousChapter;
-  final int targetIndex;
-  final List<ReadingPlanEntry> plan;
+  final int? targetIndex;
+  final List<ReadingPlanEntry>? plan;
 }
 
 class DailyReadingError extends DailyReadingState {
@@ -100,6 +102,39 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
       return loadedState;
     } catch (e) {
       return DailyReadingError(message: e.toString());
+    }
+  }
+
+  Future<void> loadFreeChapter(
+    String bookId,
+    String bookName,
+    int chapterNumber,
+  ) async {
+    final currentState = state.value;
+    final previousChapter = (currentState is Loaded)
+        ? currentState.chapter
+        : (currentState is FreeReadingLoaded ? currentState.chapter : null);
+
+    if (previousChapter != null) {
+      state = AsyncData(Navigating(previousChapter: previousChapter));
+    } else {
+      state = AsyncData(LoadingPlan());
+    }
+
+    try {
+      final userPrefs = await ref.read(userPreferencesProvider.future);
+      final apiService = ref.read(apiServiceProvider);
+
+      final newChapter = await apiService.fetchChapter(
+        translationId: userPrefs.translationId,
+        bookId: bookId,
+        bookName: bookName,
+        chapterNumber: chapterNumber,
+      );
+
+      state = AsyncData(FreeReadingLoaded(chapter: newChapter));
+    } catch (e) {
+      state = AsyncData(DailyReadingError(message: e.toString()));
     }
   }
 
