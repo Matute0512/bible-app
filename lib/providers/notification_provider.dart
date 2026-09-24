@@ -1,11 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/notification_service.dart';
-import '../main.dart'; // To access navigatorKey
+import '../router.dart'; // To access navigatorKey
+
+import 'package:go_router/go_router.dart';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService(
     onNotificationTap: () {
-      navigatorKey.currentState?.popUntil((route) => route.isFirst);
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        context.go('/reading');
+      }
     },
   );
 });

@@ -5,13 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'providers/app_providers.dart';
 import 'models/user_preferences.dart';
-import 'screens/home_screen.dart';
-import 'screens/onboarding_screen.dart';
 import 'theme/bible_theme.dart';
+import 'router.dart';
 
-/// Global navigator key so the notification tap handler can route back to the
-/// Home screen from anywhere in the app.
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+// The global navigatorKey is now in router.dart
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,10 +53,11 @@ class BibleApp extends ConsumerWidget {
     final lightTheme = _appTheme(Brightness.light, isSepia: isSepia);
     final darkTheme = _appTheme(Brightness.dark);
 
-    return MaterialApp(
+    final router = ref.watch(routerProvider);
+
+    return MaterialApp.router(
       title: 'Lectura Bíblica Diaria',
       debugShowCheckedModeBanner: false,
-      navigatorKey: navigatorKey,
       themeMode: themeMode,
       theme: lightTheme,
       darkTheme: darkTheme,
@@ -70,7 +68,7 @@ class BibleApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const StartupGate(),
+      routerConfig: router,
     );
   }
 
@@ -149,31 +147,6 @@ class BibleApp extends ConsumerWidget {
       progressIndicatorTheme: ProgressIndicatorThemeData(color: scheme.primary),
       splashFactory: InkSparkle.splashFactory,
       highlightColor: Colors.transparent,
-    );
-  }
-}
-
-/// Decides between Onboarding (first run) and Home (returning user).
-class StartupGate extends ConsumerWidget {
-  const StartupGate({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final readingPlan = ref.watch(readingPlanProvider);
-
-    return FutureBuilder<bool>(
-      future: readingPlan.hasInstallationDate(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        if (snapshot.data!) {
-          return const HomeScreen();
-        }
-        return const OnboardingScreen();
-      },
     );
   }
 }
