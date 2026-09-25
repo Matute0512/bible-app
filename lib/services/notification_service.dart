@@ -60,9 +60,10 @@ class NotificationService {
       // only applies channel settings on first creation, so this guarantees
       // fresh installs get the loud, heads-up reminder. (`playSound` is also
       // set in the details below, but the channel is what really controls it.)
-      final android =
-          _plugin.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       await android?.createNotificationChannel(
         const AndroidNotificationChannel(
           _channelId,
@@ -72,13 +73,16 @@ class NotificationService {
           playSound: true,
         ),
       );
-      debugPrint('[notifications] Channel "$_channelId" ready (importance=max)');
+      debugPrint(
+        '[notifications] Channel "$_channelId" ready (importance=max)',
+      );
+      // Mark initialized only when plugin + channel are both ready.
+      // If init() threw above, _initialized stays false so it can be retried.
+      _initialized = true;
     } on Exception catch (e) {
       // Notification features degrade to no-ops; the reading still works.
       debugPrint('[notifications] Plugin init failed: $e');
     }
-
-    _initialized = true;
   }
 
   /// Resolves the device timezone and points `tz.local` at it.
@@ -108,35 +112,62 @@ class NotificationService {
 
       tz.setLocalLocation(tz.getLocation(targetTimeZone));
       debugPrint(
-          '[notifications] tz.local set successfully to: ${tz.local.name}');
+        '[notifications] tz.local set successfully to: ${tz.local.name}',
+      );
     } catch (e) {
-      debugPrint('[notifications] Timezone lookup failed for "$targetTimeZone" '
-          '($e). Falling back to UTC.');
+      debugPrint(
+        '[notifications] Timezone lookup failed for "$targetTimeZone" '
+        '($e). Falling back to UTC.',
+      );
       tz.setLocalLocation(tz.getLocation('UTC'));
     }
   }
 
-  /// Requests the Android 13+ runtime notification permission. No-op on older
-  /// Android versions, where the permission is granted at install time.
+  /// Requests runtime notification permission.
   ///
-  /// This is the correct v22 API (`requestNotificationsPermission`); there is
-  /// no `RequestNotificationsPermissionDetails` class in this version.
-  ///
-  /// Returns whether notifications are allowed after the request.
+  /// On Android 13+ this requests POST_NOTIFICATIONS.
+  /// On iOS/macOS this requests alert, sound, and badge permissions.
+  /// Returns `true` when the system granted permission.
   Future<bool> requestPermission() async {
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    if (android == null) {
-      return false;
+    // Android 13+ (API 33+) requires POST_NOTIFICATIONS at runtime.
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (android != null) {
+      final granted = await android.requestNotificationsPermission() ?? false;
+      debugPrint(
+        granted
+            ? '[notifications] Permission GRANTED'
+            : '[notifications] ⚠️ Permission DENIED — Android 13+ requires '
+                  'POST_NOTIFICATIONS to show any notification',
+      );
+      return granted;
     }
-    final granted = await android.requestNotificationsPermission() ?? false;
-    if (granted) {
-      debugPrint('[notifications] Permission GRANTED');
-    } else {
-      debugPrint('[notifications] ⚠️ Permission DENIED — Android 13+ requires '
-          'POST_NOTIFICATIONS to show any notification');
+
+    // iOS / macOS — use the Darwin implementation.
+    final darwin = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+    if (darwin != null) {
+      final granted =
+          await darwin.requestPermissions(
+            alert: true,
+            sound: true,
+            badge: true,
+          ) ??
+          false;
+      debugPrint(
+        granted
+            ? '[notifications] iOS Permission GRANTED'
+            : '[notifications] ⚠️ iOS Permission DENIED',
+      );
+      return granted;
     }
-    return granted;
+
+    // Unsupported platform or plugin not initialised — assume allowed.
+    return true;
   }
 
   /// Cancels the previous reminder and schedules a new daily one at [time].
@@ -155,16 +186,20 @@ class NotificationService {
     required TimeOfDay time,
     required String passageReference,
   }) async {
+    // cancel({required int id}) — named argument required in flutter_local_notifications v22.
     await _plugin.cancel(id: _dailyNotificationId);
     debugPrint(
-        '[notifications] Canceled previous reminder (id=$_dailyNotificationId)');
+      '[notifications] Canceled previous reminder (id=$_dailyNotificationId)',
+    );
 
     // Device wall clock vs. the zone `tz.local` was resolved to. If these
     // differ by hours, the timezone setup is wrong and the reminder will fire
     // at the wrong local hour.
     final deviceNow = DateTime.now();
-    debugPrint('[notifications] Hora actual del dispositivo: $deviceNow '
-        '(UTC offset ${deviceNow.timeZoneOffset})');
+    debugPrint(
+      '[notifications] Hora actual del dispositivo: $deviceNow '
+      '(UTC offset ${deviceNow.timeZoneOffset})',
+    );
     final now = tz.TZDateTime.now(tz.local);
     debugPrint('[notifications] tz.local now: $now (${tz.local.name})');
 
@@ -179,11 +214,15 @@ class NotificationService {
       time.minute,
     );
     if (!scheduled.isAfter(now)) {
-      debugPrint('[notifications] Hora de hoy ya pasó, se programa para mañana');
+      debugPrint(
+        '[notifications] Hora de hoy ya pasó, se programa para mañana',
+      );
       scheduled = scheduled.add(const Duration(days: 1));
     }
-    debugPrint('[notifications] Hora programada para la notificación: $scheduled '
-        '(${scheduled.location.name}) — UTC: ${scheduled.toUtc()}');
+    debugPrint(
+      '[notifications] Hora programada para la notificación: $scheduled '
+      '(${scheduled.location.name}) — UTC: ${scheduled.toUtc()}',
+    );
 
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
@@ -196,16 +235,22 @@ class NotificationService {
       ),
     );
 
-    await _plugin.zonedSchedule(
-      id: _dailyNotificationId,
-      title: 'Tu lectura diaria: $passageReference',
-      body: 'Toca para leer el pasaje de hoy',
-      scheduledDate: scheduled,
-      notificationDetails: details,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
-    debugPrint('[notifications] Daily reminder scheduled: $passageReference');
-    return true;
+    try {
+      await _plugin.zonedSchedule(
+        id: _dailyNotificationId,
+        title: 'Tu lectura diaria: $passageReference',
+        body: 'Toca para leer el pasaje de hoy',
+        scheduledDate: scheduled,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+      debugPrint('[notifications] Daily reminder scheduled: $passageReference');
+      return true;
+    } on Exception catch (e) {
+      // SCHEDULE_EXACT_ALARM may be missing on Android 12+ — degrade silently.
+      debugPrint('[notifications] Failed to schedule reminder: $e');
+      return false;
+    }
   }
 }
