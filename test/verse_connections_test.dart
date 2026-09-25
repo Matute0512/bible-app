@@ -14,7 +14,10 @@ void main() {
     for (final connection in connections) {
       expect(connection.target.reference, isNotEmpty);
       expect(connection.target.bookId, isNotEmpty);
-      expect(connection.note, isNotEmpty);
+      // note is nullable by contract; when present it must be non-empty.
+      if (connection.note != null) {
+        expect(connection.note, isNotEmpty);
+      }
     }
     // A well-known link is present: creation in John 1.
     expect(
