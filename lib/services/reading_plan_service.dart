@@ -41,7 +41,10 @@ class ReadingPlanService {
   final SharedPreferences prefs;
 
   /// SharedPreferences key holding the UTC installation timestamp.
-  static const String _installationDateKey = 'installation_date_utc';
+  ///
+  /// Exposed publicly so dependent components (e.g. the router's onboarding
+  /// guard) can reference the same key without string duplication.
+  static const String installationDateKey = 'installation_date_utc';
 
   /// The 66 book ids of the Protestant canon.
   static const Set<String> _protestantCanonBookIds = {
@@ -77,18 +80,18 @@ class ReadingPlanService {
   /// The installation date anchors the plan: every new user starts at
   /// Genesis 1 and reads one chapter per day from there.
   Future<DateTime> getInstallationDate() async {
-    final stored = prefs.getString(_installationDateKey);
+    final stored = prefs.getString(installationDateKey);
     if (stored != null) {
       return DateTime.parse(stored).toUtc();
     }
     final now = DateTime.now().toUtc();
-    await prefs.setString(_installationDateKey, now.toIso8601String());
+    await prefs.setString(installationDateKey, now.toIso8601String());
     return now;
   }
 
   /// Whether the installation date has been persisted (i.e. onboarding done).
   Future<bool> hasInstallationDate() async =>
-      prefs.containsKey(_installationDateKey);
+      prefs.containsKey(installationDateKey);
 
   /// Number of whole days elapsed since installation (0 on day one).
   ///
@@ -96,7 +99,11 @@ class ReadingPlanService {
   Future<int> daysElapsed({DateTime? now}) async {
     final installationDate = await getInstallationDate();
     final reference = (now ?? DateTime.now()).toUtc();
-    return reference.difference(installationDate).inDays;
+    final days = reference.difference(installationDate).inDays;
+    // [FIX] Clamp to 0: a device clock rollback or DST edge-case can produce
+    // a negative value, which would cause `% plan.length` to throw a
+    // RangeError when used as an index.
+    return days < 0 ? 0 : days;
   }
 
   /// Builds the full reading plan for [translation].

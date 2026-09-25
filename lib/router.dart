@@ -7,6 +7,7 @@ import 'screens/dashboard_screen.dart';
 import 'screens/explore_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/reading_screen.dart';
+import 'services/reading_plan_service.dart';
 
 /// Shared navigator key. Used by [NotificationService] to navigate from a
 /// background tap without needing a BuildContext.
@@ -22,14 +23,18 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 /// `Provider` that holds an immutable `GoRouter` instance for the lifetime
 /// of the app, which is the recommended GoRouter + Riverpod pattern.
 final routerProvider = Provider<GoRouter>((ref) {
-  // Watch the preferences AsyncValue so the router rebuilds after init.
-  final prefsAsync = ref.watch(sharedPreferencesProvider);
+  // [FIX-RO-01] Do NOT call ref.watch inside a Provider<GoRouter> body.
+  // Watching a provider causes the Provider to rebuild on every emission,
+  // which creates a brand-new GoRouter instance and resets the navigation
+  // stack. Instead, _RouterRefreshListenable re-evaluates only the redirect
+  // function, leaving the router instance stable.
+  final listenable = _RouterRefreshListenable(ref);
+  ref.onDispose(listenable.dispose); // [FIX-RO-03] dispose ChangeNotifier
 
   return GoRouter(
     navigatorKey: navigatorKey,
     initialLocation: '/dashboard',
-    // Re-evaluate redirect every time the prefs state changes.
-    refreshListenable: _RouterRefreshListenable(ref),
+    refreshListenable: listenable,
     routes: [
       GoRoute(
         path: '/onboarding',
@@ -49,15 +54,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
-      // Prefs not yet loaded → show nothing (GoRouter will call this again
-      // when `refreshListenable` notifies).
+      // [FIX-RO-01] Read synchronously inside the redirect — called only when
+      // _RouterRefreshListenable notifies, not on every provider emission.
+      final prefsAsync = ref.read(sharedPreferencesProvider);
       if (!prefsAsync.hasValue) return null;
 
-      // Use the reading-plan service to check onboarding synchronously via
-      // a cached SharedPreferences value (already loaded above).
       final prefs = prefsAsync.requireValue;
-      // Key is defined as ReadingPlanService._installationDateKey = 'installation_date_utc'
-      final hasInstallation = prefs.containsKey('installation_date_utc');
+      // [FIX-RO-02] Reference the key constant from ReadingPlanService so a
+      // rename stays in sync automatically.
+      final hasInstallation =
+          prefs.containsKey(ReadingPlanService.installationDateKey);
 
       final isOnboarding = state.matchedLocation == '/onboarding';
 
