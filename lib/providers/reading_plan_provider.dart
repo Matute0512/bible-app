@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/bible_chapter.dart';
 import '../services/reading_plan_service.dart';
@@ -56,11 +57,23 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
 
   Future<DailyReadingState> _loadInitialState() async {
     try {
-      final userPrefs = await ref.watch(userPreferencesProvider.future);
+      // [FIX] Use ref.read (not ref.watch) inside non-build async method.
+      // ref.watch here would register a persistent listener, causing double
+      // rebuilds if userPreferencesProvider emits after the initial load.
+      final userPrefs = await ref.read(userPreferencesProvider.future);
       final readingPlanService = ref.read(readingPlanProvider);
       final apiService = ref.read(apiServiceProvider);
 
       final plan = await readingPlanService.buildPlan(userPrefs.translation);
+
+      // [FIX] Guard against an empty plan (e.g. API returns 0 books) to
+      // prevent an IntegerDivisionByZeroException on `elapsed % plan.length`.
+      if (plan.isEmpty) {
+        return DailyReadingError(
+          message: 'No se pudo construir el plan de lectura.',
+        );
+      }
+
       final elapsed = await readingPlanService.daysElapsed();
       final todayIndex = elapsed % plan.length;
 
@@ -78,7 +91,7 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
         chapter: chapter,
       );
 
-      // Reschedule notification now that we have the plan
+      // Reschedule notification now that we have the plan.
       final notificationService = ref.read(notificationServiceProvider);
       if (userPrefs.notificationsEnabled) {
         final now = DateTime.now();
@@ -86,17 +99,22 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
         final reminder = userPrefs.notificationTime;
         final reminderMinutes = reminder.hour * 60 + reminder.minute;
 
-        final index = nowMinutes >= reminderMinutes
+        final notificationIndex = nowMinutes >= reminderMinutes
             ? (todayIndex + 1) % plan.length
             : todayIndex;
 
-        final entry = plan[index];
+        // [FIX] Renamed inner variable to avoid shadowing the outer `entry`.
+        final notificationEntry = plan[notificationIndex];
         notificationService
             .scheduleDailyNotification(
               time: userPrefs.notificationTime,
-              passageReference: entry.reference,
+              passageReference: notificationEntry.reference,
             )
-            .catchError((_) => false); // Ignore errors silently on initial load
+            .catchError((Object e) {
+          // Log scheduling errors instead of silently discarding them.
+          debugPrint('[reading_plan] Notification scheduling failed: $e');
+          return false;
+        });
       }
 
       return loadedState;
