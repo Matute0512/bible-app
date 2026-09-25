@@ -603,7 +603,7 @@ class VerseConnectionService {
     'ACT:2': [
       VerseConnection(
         kind: ConnectionKind.quote,
-        target: PassageRef(bookId: 'JOE', bookName: 'Joel', chapterNumber: 2),
+        target: PassageRef(bookId: 'JOL', bookName: 'Joel', chapterNumber: 2),
         note: 'Derramaré de mi Espíritu sobre toda carne.',
       ),
       VerseConnection(
