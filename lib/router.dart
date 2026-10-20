@@ -62,8 +62,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final prefs = prefsAsync.requireValue;
       // [FIX-RO-02] Reference the key constant from ReadingPlanService so a
       // rename stays in sync automatically.
-      final hasInstallation =
-          prefs.containsKey(ReadingPlanService.installationDateKey);
+      final hasInstallation = prefs.containsKey(
+        ReadingPlanService.installationDateKey,
+      );
 
       final isOnboarding = state.matchedLocation == '/onboarding';
 

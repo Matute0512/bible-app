@@ -48,20 +48,83 @@ class ReadingPlanService {
 
   /// The 66 book ids of the Protestant canon.
   static const Set<String> _protestantCanonBookIds = {
-    'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT',
-    '1SA', '2SA', '1KI', '2KI', '1CH', '2CH', 'EZR', 'NEH',
-    'EST', 'JOB', 'PSA', 'PRO', 'ECC', 'SNG', 'ISA', 'JER',
-    'LAM', 'EZK', 'DAN', 'HOS', 'JOL', 'AMO', 'OBA', 'JON',
-    'MIC', 'NAM', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL',
-    'MAT', 'MRK', 'LUK', 'JHN', 'ACT', 'ROM', '1CO', '2CO',
-    'GAL', 'EPH', 'PHP', 'COL', '1TH', '2TH', '1TI', '2TI',
-    'TIT', 'PHM', 'HEB', 'JAS', '1PE', '2PE', '1JN', '2JN',
-    '3JN', 'JUD', 'REV',
+    'GEN',
+    'EXO',
+    'LEV',
+    'NUM',
+    'DEU',
+    'JOS',
+    'JDG',
+    'RUT',
+    '1SA',
+    '2SA',
+    '1KI',
+    '2KI',
+    '1CH',
+    '2CH',
+    'EZR',
+    'NEH',
+    'EST',
+    'JOB',
+    'PSA',
+    'PRO',
+    'ECC',
+    'SNG',
+    'ISA',
+    'JER',
+    'LAM',
+    'EZK',
+    'DAN',
+    'HOS',
+    'JOL',
+    'AMO',
+    'OBA',
+    'JON',
+    'MIC',
+    'NAM',
+    'HAB',
+    'ZEP',
+    'HAG',
+    'ZEC',
+    'MAL',
+    'MAT',
+    'MRK',
+    'LUK',
+    'JHN',
+    'ACT',
+    'ROM',
+    '1CO',
+    '2CO',
+    'GAL',
+    'EPH',
+    'PHP',
+    'COL',
+    '1TH',
+    '2TH',
+    '1TI',
+    '2TI',
+    'TIT',
+    'PHM',
+    'HEB',
+    'JAS',
+    '1PE',
+    '2PE',
+    '1JN',
+    '2JN',
+    '3JN',
+    'JUD',
+    'REV',
   };
 
   /// The 7 deuterocanonical book ids of the Catholic canon.
   static const Set<String> _deuterocanonicalBookIds = {
-    'TOB', 'JDT', 'WIS', 'SIR', 'BAR', '1MA', '2MA',
+    'TOB',
+    'JDT',
+    'WIS',
+    'SIR',
+    'BAR',
+    '1MA',
+    '2MA',
   };
 
   /// The 73 book ids of the standard Catholic canon.
@@ -112,9 +175,7 @@ class ReadingPlanService {
   /// dropped so the plan covers exactly the 73-book canon. The remaining
   /// books are ordered by their `order` field and flattened into one entry
   /// per chapter.
-  Future<List<ReadingPlanEntry>> buildPlan(
-    BibleTranslation translation,
-  ) async {
+  Future<List<ReadingPlanEntry>> buildPlan(BibleTranslation translation) async {
     final books = await api.fetchBooks(translation.translationId);
 
     final canonical = translation == BibleTranslation.catholic
@@ -142,18 +203,14 @@ class ReadingPlanService {
   Future<ReadingPlanEntry> chapterForToday(
     BibleTranslation translation, {
     DateTime? now,
-  }) async =>
-      (await todayAndTomorrow(translation, now: now)).today;
+  }) async => (await todayAndTomorrow(translation, now: now)).today;
 
   /// Resolves today's and tomorrow's chapters with a single plan build.
   ///
   /// Tomorrow's entry labels the scheduled daily notification, so the
   /// notification always advertises the passage the user is about to read.
   Future<({ReadingPlanEntry today, ReadingPlanEntry tomorrow})>
-      todayAndTomorrow(
-    BibleTranslation translation, {
-    DateTime? now,
-  }) async {
+  todayAndTomorrow(BibleTranslation translation, {DateTime? now}) async {
     final plan = await buildPlan(translation);
     if (plan.isEmpty) {
       throw const BibleApiException(

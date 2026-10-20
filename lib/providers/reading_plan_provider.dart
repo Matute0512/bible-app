@@ -111,10 +111,10 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
               passageReference: notificationEntry.reference,
             )
             .catchError((Object e) {
-          // Log scheduling errors instead of silently discarding them.
-          debugPrint('[reading_plan] Notification scheduling failed: $e');
-          return false;
-        });
+              // Log scheduling errors instead of silently discarding them.
+              debugPrint('[reading_plan] Notification scheduling failed: $e');
+              return false;
+            });
       }
 
       return loadedState;

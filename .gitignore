@@ -12,6 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 
+# Configuracion local de Flutter DevTools
+devtools_options.yaml
+
 # IntelliJ related
 *.iml
 *.ipr
