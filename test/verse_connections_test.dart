@@ -1,4 +1,5 @@
 import 'package:bible_app/services/verse_connections_service.dart';
+import 'package:bible_app/widgets/graph_explorer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Validates the curated cross-reference catalog that powers the graph

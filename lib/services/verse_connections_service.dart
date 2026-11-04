@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 
 /// A passage of the Bible addressed the same way the reading API does it
 /// (book id + chapter), so it can be matched back against the reading plan.
@@ -702,13 +701,3 @@ class VerseConnectionService {
   bool hasConnections({required String bookId, required int chapterNumber}) =>
       _index.containsKey('$bookId:$chapterNumber');
 }
-
-/// Material icon that best conveys [kind] on a connection chip.
-IconData connectionIconFor(ConnectionKind kind) => switch (kind) {
-  ConnectionKind.parallel => Icons.sync_alt,
-  ConnectionKind.prophecy => Icons.record_voice_over_outlined,
-  ConnectionKind.fulfillment => Icons.task_alt,
-  ConnectionKind.theme => Icons.bubble_chart_outlined,
-  ConnectionKind.quote => Icons.format_quote,
-  ConnectionKind.contrast => Icons.balance,
-};

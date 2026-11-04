@@ -61,7 +61,7 @@ class GraphExplorerWidget extends ConsumerWidget {
         );
 
     final originHint =
-        fromVerse != null ? 'desde el versículo $fromVerse' : null;
+        fromVerse != null ? 'Desde el versículo $fromVerse' : null;
 
     /// Navigates to [target] passage, handling both plan-based and free reading.
     ///
@@ -697,3 +697,13 @@ class _ConnectionRow extends StatelessWidget {
     );
   }
 }
+
+/// Material icon that best conveys [kind] on a connection chip.
+IconData connectionIconFor(ConnectionKind kind) => switch (kind) {
+  ConnectionKind.parallel => Icons.sync_alt,
+  ConnectionKind.prophecy => Icons.record_voice_over_outlined,
+  ConnectionKind.fulfillment => Icons.task_alt,
+  ConnectionKind.theme => Icons.bubble_chart_outlined,
+  ConnectionKind.quote => Icons.format_quote,
+  ConnectionKind.contrast => Icons.balance,
+};
