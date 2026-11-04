@@ -16,6 +16,8 @@ import 'package:bible_app/theme/bible_theme.dart';
 
 class MockApi implements BibleApiService {
   @override
+  Future<Map<String, dynamic>> fetchCompleteTranslationSimple(String translationId) async => {};
+  @override
   Future<List<BibleBook>> fetchBooks(String translationId) async => [
         const BibleBook(id: 'GEN', name: 'Génesis', order: 1, chapterCount: 50),
       ];

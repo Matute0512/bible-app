@@ -29,6 +29,12 @@ final chapterAnnotationsProvider = StreamProvider.family<
   },
 );
 
+/// Reactive stream of all saved annotations (favorites, highlights, notes).
+final allAnnotationsProvider = StreamProvider<List<VerseAnnotation>>((ref) {
+  final repo = ref.watch(studyRepositoryProvider);
+  return repo.watchAllAnnotations();
+});
+
 /// Reactive stream of all favorite verses.
 final allFavoritesProvider = StreamProvider<List<VerseAnnotation>>((ref) {
   final repo = ref.watch(studyRepositoryProvider);

@@ -82,6 +82,8 @@ class VerseAnnotation {
 
   bool get hasAnnotation => isFavorite || hasHighlight || hasNote;
 
+  String get reference => '$bookNameSnapshot $chapterNumber:$verseNumber';
+
   List<String> get tags {
     if (tagsCsv == null || tagsCsv!.trim().isEmpty) return const [];
     return tagsCsv!

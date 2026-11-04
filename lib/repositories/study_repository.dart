@@ -125,6 +125,12 @@ class StudyRepository {
     );
   }
 
+  /// Gets all saved annotations.
+  Future<List<VerseAnnotation>> getAllAnnotations() => studyDao.getAllAnnotations();
+
+  /// Watches all saved annotations.
+  Stream<List<VerseAnnotation>> watchAllAnnotations() => studyDao.watchAllAnnotations();
+
   /// Gets all favorite verses.
   Future<List<VerseAnnotation>> getAllFavorites() =>
       studyDao.getAllFavorites();

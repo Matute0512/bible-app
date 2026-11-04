@@ -245,6 +245,21 @@ class StudyDao extends DatabaseAccessor<AppDatabase> with _$StudyDaoMixin {
     });
   }
 
+  /// Gets all annotations sorted by updated time descending.
+  Future<List<VerseAnnotation>> getAllAnnotations() async {
+    final query = select(verseAnnotations)
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAtMs)]);
+    final rows = await query.get();
+    return rows.map(_mapRow).toList();
+  }
+
+  /// Watches all annotations sorted by updated time descending.
+  Stream<List<VerseAnnotation>> watchAllAnnotations() {
+    final query = select(verseAnnotations)
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAtMs)]);
+    return query.watch().map((rows) => rows.map(_mapRow).toList());
+  }
+
   /// Gets all favorite verses sorted by updated time descending.
   Future<List<VerseAnnotation>> getAllFavorites() async {
     final query = select(verseAnnotations)
