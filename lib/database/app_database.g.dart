@@ -3631,6 +3631,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final BibleCacheDao bibleCacheDao = BibleCacheDao(this as AppDatabase);
+  late final HistoryDao historyDao = HistoryDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
