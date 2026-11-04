@@ -45,4 +45,30 @@ void main() {
       expect(connectionIconFor(kind), isNotNull);
     }
   });
+
+  test('loadFromJsonString populates new connections dynamically', () {
+    const customJson = '''
+    {
+      "MAT:1": [
+        {
+          "kind": "fulfillment",
+          "target": {
+            "bookId": "ISA",
+            "bookName": "Isaías",
+            "chapterNumber": 7
+          },
+          "note": "Profecía de Emanuel."
+        }
+      ]
+    }
+    ''';
+
+    VerseConnectionService.loadFromJsonString(customJson);
+    final conns = service.connectionsFor(bookId: 'MAT', chapterNumber: 1);
+    expect(conns, hasLength(1));
+    expect(conns.first.kind, ConnectionKind.fulfillment);
+    expect(conns.first.target.bookName, 'Isaías');
+    expect(conns.first.target.chapterNumber, 7);
+    expect(conns.first.note, 'Profecía de Emanuel.');
+  });
 }

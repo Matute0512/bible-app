@@ -1,0 +1,681 @@
+{
+  "GEN:1": [
+    {
+      "kind": "parallel",
+      "target": {
+        "bookId": "JHN",
+        "bookName": "Juan",
+        "chapterNumber": 1
+      },
+      "note": "En el principio creó Dios / En el principio era el Verbo."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "PSA",
+        "bookName": "Salmos",
+        "chapterNumber": 104
+      },
+      "note": "El salmo alaba a Dios por su obra creadora."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "HEB",
+        "bookName": "Hebreos",
+        "chapterNumber": 11
+      },
+      "note": "Por la fe entendemos que los mundos fueron formados."
+    },
+    {
+      "kind": "contrast",
+      "target": {
+        "bookId": "REV",
+        "bookName": "Apocalipsis",
+        "chapterNumber": 21
+      },
+      "note": "La antigua creación da paso a los nuevos cielos y tierra."
+    }
+  ],
+  "GEN:3": [
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "ROM",
+        "bookName": "Romanos",
+        "chapterNumber": 5
+      },
+      "note": "Por un hombre entró el pecado; por Cristo, la vida."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "REV",
+        "bookName": "Apocalipsis",
+        "chapterNumber": 12
+      },
+      "note": "La serpiente antigua finalmente es vencida."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "GEN",
+        "bookName": "Génesis",
+        "chapterNumber": 22
+      },
+      "note": "El Hijo de la promesa que Dios mismo provee."
+    }
+  ],
+  "GEN:6": [
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "MAT",
+        "bookName": "Mateo",
+        "chapterNumber": 24
+      },
+      "note": "Jesús compara sus días con los de Noé."
+    },
+    {
+      "kind": "parallel",
+      "target": {
+        "bookId": "1PE",
+        "bookName": "1 Pedro",
+        "chapterNumber": 3
+      },
+      "note": "Pedro ve en el arca una figura del bautismo."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "HEB",
+        "bookName": "Hebreos",
+        "chapterNumber": 11
+      },
+      "note": "Noé construyó el arca con temor reverente."
+    }
+  ],
+  "GEN:12": [
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "ROM",
+        "bookName": "Romanos",
+        "chapterNumber": 4
+      },
+      "note": "Abraham es el padre de los que creen."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "GAL",
+        "bookName": "Gálatas",
+        "chapterNumber": 3
+      },
+      "note": "En tu descendencia serán benditas todas las naciones."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "HEB",
+        "bookName": "Hebreos",
+        "chapterNumber": 11
+      },
+      "note": "Salió sin saber a dónde iba."
+    }
+  ],
+  "GEN:22": [
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "HEB",
+        "bookName": "Hebreos",
+        "chapterNumber": 11
+      },
+      "note": "Abraham ofreció a Isaac, pensando que Dios podía resucitarlo."
+    },
+    {
+      "kind": "contrast",
+      "target": {
+        "bookId": "JHN",
+        "bookName": "Juan",
+        "chapterNumber": 3
+      },
+      "note": "Dios no retuvo a su propio Hijo. Ya no es un cordero en lugar de Isaac."
+    }
+  ],
+  "PSA:22": [
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "MAT",
+        "bookName": "Mateo",
+        "chapterNumber": 27
+      },
+      "note": "Dios mío, Dios mío, ¿por qué me has desamparado?"
+    },
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "JHN",
+        "bookName": "Juan",
+        "chapterNumber": 19
+      },
+      "note": "Repartieron entre sí mis vestidos."
+    }
+  ],
+  "PSA:23": [
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "JHN",
+        "bookName": "Juan",
+        "chapterNumber": 10
+      },
+      "note": "Jesús se presenta como el buen pastor."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "EZK",
+        "bookName": "Ezequiel",
+        "chapterNumber": 34
+      },
+      "note": "Dios mismo promete apacentar a su rebaño."
+    }
+  ],
+  "PSA:110": [
+    {
+      "kind": "quote",
+      "target": {
+        "bookId": "MAT",
+        "bookName": "Mateo",
+        "chapterNumber": 22
+      },
+      "note": "Jesús pregunta cómo el Mesías es Hijo de David y su Señor."
+    },
+    {
+      "kind": "quote",
+      "target": {
+        "bookId": "HEB",
+        "bookName": "Hebreos",
+        "chapterNumber": 7
+      },
+      "note": "Sacerdote para siempre según el orden de Melquisedec."
+    }
+  ],
+  "ISA:7": [
+    {
+      "kind": "prophecy",
+      "target": {
+        "bookId": "MAT",
+        "bookName": "Mateo",
+        "chapterNumber": 1
+      },
+      "note": "La virgen concebirá y llamará su nombre Emanuel."
+    }
+  ],
+  "ISA:53": [
+    {
+      "kind": "prophecy",
+      "target": {
+        "bookId": "ACT",
+        "bookName": "Hechos",
+        "chapterNumber": 8
+      },
+      "note": "El eunuco lee a Isaías y Felipe le anuncia a Jesús."
+    },
+    {
+      "kind": "prophecy",
+      "target": {
+        "bookId": "1PE",
+        "bookName": "1 Pedro",
+        "chapterNumber": 2
+      },
+      "note": "Llevó nuestros pecados en su cuerpo sobre el madero."
+    },
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "MAT",
+        "bookName": "Mateo",
+        "chapterNumber": 8
+      },
+      "note": "Tomó nuestras enfermedades y llevó nuestras dolencias."
+    }
+  ],
+  "ISA:61": [
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "LUK",
+        "bookName": "Lucas",
+        "chapterNumber": 4
+      },
+      "note": "Jesús lee el rollo en Nazaret y dice: hoy se cumple."
+    }
+  ],
+  "MAT:1": [
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "ISA",
+        "bookName": "Isaías",
+        "chapterNumber": 7
+      },
+      "note": "Nacimiento virginal anunciado como Emanuel."
+    },
+    {
+      "kind": "parallel",
+      "target": {
+        "bookId": "LUK",
+        "bookName": "Lucas",
+        "chapterNumber": 2
+      },
+      "note": "El otro relato del nacimiento, desde María."
+    }
+  ],
+  "MAT:2": [
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "MIC",
+        "bookName": "Miqueas",
+        "chapterNumber": 5
+      },
+      "note": "De ti, Belén, saldrá el gobernante de Israel."
+    },
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "HOS",
+        "bookName": "Oseas",
+        "chapterNumber": 11
+      },
+      "note": "De Egipto llamé a mi hijo."
+    }
+  ],
+  "MAT:4": [
+    {
+      "kind": "parallel",
+      "target": {
+        "bookId": "LUK",
+        "bookName": "Lucas",
+        "chapterNumber": 4
+      },
+      "note": "Las tentaciones narradas también por Lucas."
+    },
+    {
+      "kind": "quote",
+      "target": {
+        "bookId": "DEU",
+        "bookName": "Deuteronomio",
+        "chapterNumber": 8
+      },
+      "note": "No solo de pan vivirá el hombre."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "ISA",
+        "bookName": "Isaías",
+        "chapterNumber": 9
+      },
+      "note": "El pueblo que andaba en tinieblas vio gran luz."
+    }
+  ],
+  "MAT:5": [
+    {
+      "kind": "parallel",
+      "target": {
+        "bookId": "LUK",
+        "bookName": "Lucas",
+        "chapterNumber": 6
+      },
+      "note": "El discurso del llano recoge las bienaventuranzas."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "ROM",
+        "bookName": "Romanos",
+        "chapterNumber": 12
+      },
+      "note": "Vivir como ofrenda viva y bendecir a quienes nos persiguen."
+    }
+  ],
+  "MAT:24": [
+    {
+      "kind": "parallel",
+      "target": {
+        "bookId": "MRK",
+        "bookName": "Marcos",
+        "chapterNumber": 13
+      },
+      "note": "El mismo discurso en Marcos."
+    },
+    {
+      "kind": "parallel",
+      "target": {
+        "bookId": "LUK",
+        "bookName": "Lucas",
+        "chapterNumber": 21
+      },
+      "note": "El mismo discurso en Lucas."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "DAN",
+        "bookName": "Daniel",
+        "chapterNumber": 12
+      },
+      "note": "Tiempo de angustia y promesa de resurrección."
+    }
+  ],
+  "MAT:27": [
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "PSA",
+        "bookName": "Salmos",
+        "chapterNumber": 22
+      },
+      "note": "El salmo del Crucificado, citado en la cruz."
+    },
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "ZEC",
+        "bookName": "Zacarías",
+        "chapterNumber": 11
+      },
+      "note": "Pesaron mi salario: treinta piezas de plata."
+    },
+    {
+      "kind": "prophecy",
+      "target": {
+        "bookId": "ISA",
+        "bookName": "Isaías",
+        "chapterNumber": 53
+      },
+      "note": "Herido fue por nuestras rebeliones."
+    }
+  ],
+  "MAT:28": [
+    {
+      "kind": "parallel",
+      "target": {
+        "bookId": "MRK",
+        "bookName": "Marcos",
+        "chapterNumber": 16
+      },
+      "note": "La resurrección anunciada a las mujeres."
+    },
+    {
+      "kind": "parallel",
+      "target": {
+        "bookId": "LUK",
+        "bookName": "Lucas",
+        "chapterNumber": 24
+      },
+      "note": "El relato de Emaús y la gran comisión."
+    }
+  ],
+  "LUK:1": [
+    {
+      "kind": "prophecy",
+      "target": {
+        "bookId": "MAL",
+        "bookName": "Malaquías",
+        "chapterNumber": 3
+      },
+      "note": "El mensajero preparará el camino del Señor."
+    },
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "ISA",
+        "bookName": "Isaías",
+        "chapterNumber": 40
+      },
+      "note": "Voz que clama en el desierto."
+    }
+  ],
+  "LUK:2": [
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "MIC",
+        "bookName": "Miqueas",
+        "chapterNumber": 5
+      },
+      "note": "El Mesías nace en Belén, la ciudad de David."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "PSA",
+        "bookName": "Salmos",
+        "chapterNumber": 2
+      },
+      "note": "Hoy te he engendrado: el Hijo prometido al rey."
+    }
+  ],
+  "LUK:15": [
+    {
+      "kind": "parallel",
+      "target": {
+        "bookId": "MAT",
+        "bookName": "Mateo",
+        "chapterNumber": 18
+      },
+      "note": "La parábola de la oveja perdida, también en Mateo."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "MIC",
+        "bookName": "Miqueas",
+        "chapterNumber": 7
+      },
+      "note": "Él volverá a tener misericordia de nosotros."
+    }
+  ],
+  "JHN:1": [
+    {
+      "kind": "parallel",
+      "target": {
+        "bookId": "GEN",
+        "bookName": "Génesis",
+        "chapterNumber": 1
+      },
+      "note": "Ambos comienzan en el principio, con la creación."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "COL",
+        "bookName": "Colosenses",
+        "chapterNumber": 1
+      },
+      "note": "Todo fue creado por él y para él."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "HEB",
+        "bookName": "Hebreos",
+        "chapterNumber": 1
+      },
+      "note": "El resplandor de su gloria y la imagen de su sustancia."
+    }
+  ],
+  "JHN:3": [
+    {
+      "kind": "quote",
+      "target": {
+        "bookId": "NUM",
+        "bookName": "Números",
+        "chapterNumber": 21
+      },
+      "note": "Como Moisés levantó la serpiente en el desierto."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "EZK",
+        "bookName": "Ezequiel",
+        "chapterNumber": 36
+      },
+      "note": "Os rociaré con agua limpia y os daré un corazón nuevo."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "GEN",
+        "bookName": "Génesis",
+        "chapterNumber": 22
+      },
+      "note": "De tal manera amó Dios, que dio a su Hijo unigénito."
+    }
+  ],
+  "JHN:10": [
+    {
+      "kind": "quote",
+      "target": {
+        "bookId": "PSA",
+        "bookName": "Salmos",
+        "chapterNumber": 23
+      },
+      "note": "El buen pastor: Jehová es mi pastor."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "EZK",
+        "bookName": "Ezequiel",
+        "chapterNumber": 34
+      },
+      "note": "Yo mismo apacentaré mis ovejas, dice el Señor."
+    }
+  ],
+  "JHN:19": [
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "PSA",
+        "bookName": "Salmos",
+        "chapterNumber": 22
+      },
+      "note": "El relato del salmo se cumple en la crucifixión."
+    },
+    {
+      "kind": "fulfillment",
+      "target": {
+        "bookId": "ZEC",
+        "bookName": "Zacarías",
+        "chapterNumber": 12
+      },
+      "note": "Mirarán a mí, a quien traspasaron."
+    },
+    {
+      "kind": "prophecy",
+      "target": {
+        "bookId": "ISA",
+        "bookName": "Isaías",
+        "chapterNumber": 53
+      },
+      "note": "Como cordero llevado al matadero."
+    }
+  ],
+  "ACT:2": [
+    {
+      "kind": "quote",
+      "target": {
+        "bookId": "JOL",
+        "bookName": "Joel",
+        "chapterNumber": 2
+      },
+      "note": "Derramaré de mi Espíritu sobre toda carne."
+    },
+    {
+      "kind": "contrast",
+      "target": {
+        "bookId": "GEN",
+        "bookName": "Génesis",
+        "chapterNumber": 11
+      },
+      "note": "En Babel las lenguas se confunden; en Pentecostés, se entienden."
+    }
+  ],
+  "ROM:5": [
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "GEN",
+        "bookName": "Génesis",
+        "chapterNumber": 3
+      },
+      "note": "Por la desobediencia de un hombre, todos fueron hechos pecadores."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "ISA",
+        "bookName": "Isaías",
+        "chapterNumber": 53
+      },
+      "note": "El Justo justifica a muchos, cargando sus iniquidades."
+    }
+  ],
+  "HEB:11": [
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "GEN",
+        "bookName": "Génesis",
+        "chapterNumber": 1
+      },
+      "note": "Por la fe entendemos que los mundos fueron formados."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "GEN",
+        "bookName": "Génesis",
+        "chapterNumber": 12
+      },
+      "note": "Abraham obedeció y salió sin saber a dónde iba."
+    }
+  ],
+  "REV:21": [
+    {
+      "kind": "contrast",
+      "target": {
+        "bookId": "GEN",
+        "bookName": "Génesis",
+        "chapterNumber": 1
+      },
+      "note": "La nueva creación reemplaza a la primera."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "ISA",
+        "bookName": "Isaías",
+        "chapterNumber": 65
+      },
+      "note": "Creo nuevos cielos y nueva tierra."
+    },
+    {
+      "kind": "theme",
+      "target": {
+        "bookId": "EZK",
+        "bookName": "Ezequiel",
+        "chapterNumber": 47
+      },
+      "note": "Del templo brota el río de aguas vivas."
+    }
+  ]
+}
