@@ -1,3 +1,5 @@
+import '../utils/text_normalizer.dart';
+
 /// A book of the Bible as returned by the `books.json` endpoint.
 class BibleBook {
   const BibleBook({
@@ -12,6 +14,9 @@ class BibleBook {
 
   /// Display name in the translation's language (e.g. `Lucas`).
   final String name;
+
+  /// Formatted display name in Title Case (e.g. "Génesis" instead of "GÉNESIS").
+  String get displayName => TextNormalizer.toTitleCase(name);
 
   /// Number of chapters the book contains.
   final int chapterCount;
