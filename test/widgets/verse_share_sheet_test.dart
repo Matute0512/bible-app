@@ -9,139 +9,144 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Editorial Verse Card & Share Sheet Tests', () {
-    testWidgets('EditorialVerseCardCanvas renders short, medium, and very long verses without overflow',
-        (tester) async {
-      const shortVerse = 'Jesús lloró.';
-      const longVerse =
-          'Entonces fueron llamados los escribas del rey en el mismo tiempo, '
-          'en el mes tercero, que es Siván, a los veintitrés días del mismo; '
-          'y se escribió conforme a todo lo que mandó Mardoqueo a los judíos, '
-          'y a los príncipes, y a los capitanes y gobernadores de las provincias '
-          'que había desde la India hasta Etiopía, ciento veintisiete provincias; '
-          'a cada provincia conforme a su escritura, y a cada pueblo conforme a su lengua, '
-          'a los judíos también conforme a su escritura y su lengua.';
+    testWidgets(
+      'EditorialVerseCardCanvas renders short, medium, and very long verses without overflow',
+      (tester) async {
+        const shortVerse = 'Jesús lloró.';
+        const longVerse =
+            'Entonces fueron llamados los escribas del rey en el mismo tiempo, '
+            'en el mes tercero, que es Siván, a los veintitrés días del mismo; '
+            'y se escribió conforme a todo lo que mandó Mardoqueo a los judíos, '
+            'y a los príncipes, y a los capitanes y gobernadores de las provincias '
+            'que había desde la India hasta Etiopía, ciento veintisiete provincias; '
+            'a cada provincia conforme a su escritura, y a cada pueblo conforme a su lengua, '
+            'a los judíos también conforme a su escritura y su lengua.';
 
-      // 1. Short verse in Ivory style
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: BibleTheme.build(Brightness.light),
-          home: const Scaffold(
-            body: Center(
-              child: EditorialVerseCardCanvas(
-                verseText: shortVerse,
-                reference: 'Juan 11:35',
-                style: EditorialCardStyle.ivory,
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text(shortVerse), findsOneWidget);
-      expect(find.text('Juan 11:35'), findsOneWidget);
-      expect(find.text('bible_app · Un capítulo al día'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-
-      // 2. Extremely long verse (Ester 8:9) in Sepia style
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: BibleTheme.build(Brightness.light),
-          home: const Scaffold(
-            body: Center(
-              child: SingleChildScrollView(
+        // 1. Short verse in Ivory style
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: BibleTheme.build(Brightness.light),
+            home: const Scaffold(
+              body: Center(
                 child: EditorialVerseCardCanvas(
-                  verseText: longVerse,
-                  reference: 'Ester 8:9',
-                  translationLabel: 'Reina Valera 1909',
-                  style: EditorialCardStyle.sepia,
-                  showWatermark: false,
+                  verseText: shortVerse,
+                  reference: 'Juan 11:35',
+                  style: EditorialCardStyle.ivory,
                 ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text(longVerse), findsOneWidget);
-      expect(find.text('Ester 8:9'), findsOneWidget);
-      expect(find.text('Reina Valera 1909'), findsOneWidget);
-      expect(find.text('bible_app · Un capítulo al día'), findsNothing);
-      expect(tester.takeException(), isNull);
+        expect(find.text(shortVerse), findsOneWidget);
+        expect(find.text('Juan 11:35'), findsOneWidget);
+        expect(find.text('bible_app · Un capítulo al día'), findsOneWidget);
+        expect(tester.takeException(), isNull);
 
-      // 3. Night style
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: BibleTheme.build(Brightness.dark),
-          home: const Scaffold(
-            body: Center(
-              child: EditorialVerseCardCanvas(
-                verseText: 'En el principio creó Dios los cielos y la tierra.',
-                reference: 'Génesis 1:1',
-                style: EditorialCardStyle.night,
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Génesis 1:1'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('VerseShareSheet displays live preview, style selector, and watermark toggle',
-        (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: BibleTheme.build(Brightness.light),
-          home: Scaffold(
-            body: Builder(
-              builder: (context) => ElevatedButton(
-                onPressed: () {
-                  VerseShareSheet.show(
-                    context: context,
-                    reference: 'Juan 3:16',
-                    verseText: 'Porque de tal manera amó Dios al mundo...',
+        // 2. Extremely long verse (Ester 8:9) in Sepia style
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: BibleTheme.build(Brightness.light),
+            home: const Scaffold(
+              body: Center(
+                child: SingleChildScrollView(
+                  child: EditorialVerseCardCanvas(
+                    verseText: longVerse,
+                    reference: 'Ester 8:9',
                     translationLabel: 'Reina Valera 1909',
-                  );
-                },
-                child: const Text('Compartir'),
+                    style: EditorialCardStyle.sepia,
+                    showWatermark: false,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Compartir'));
-      await tester.pumpAndSettle();
+        expect(find.text(longVerse), findsOneWidget);
+        expect(find.text('Ester 8:9'), findsOneWidget);
+        expect(find.text('Reina Valera 1909'), findsOneWidget);
+        expect(find.text('bible_app · Un capítulo al día'), findsNothing);
+        expect(tester.takeException(), isNull);
 
-      // Verify sheet elements
-      expect(find.text('Compartir Versículo'), findsOneWidget);
-      expect(find.byType(EditorialVerseCardCanvas), findsOneWidget);
-      expect(find.text('Marfil'), findsOneWidget);
-      expect(find.text('Pergamino'), findsOneWidget);
-      expect(find.text('Vigilia'), findsOneWidget);
+        // 3. Night style
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: BibleTheme.build(Brightness.dark),
+            home: const Scaffold(
+              body: Center(
+                child: EditorialVerseCardCanvas(
+                  verseText:
+                      'En el principio creó Dios los cielos y la tierra.',
+                  reference: 'Génesis 1:1',
+                  style: EditorialCardStyle.night,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // Switch style to Pergamino
-      await tester.tap(find.text('Pergamino'));
-      await tester.pumpAndSettle();
+        expect(find.text('Génesis 1:1'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
 
-      // Scroll down to make Switch and buttons visible
-      final switchFinder = find.byType(Switch);
-      await tester.ensureVisible(switchFinder);
-      await tester.pumpAndSettle();
+    testWidgets(
+      'VerseShareSheet displays live preview, style selector, and watermark toggle',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: BibleTheme.build(Brightness.light),
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () {
+                    VerseShareSheet.show(
+                      context: context,
+                      reference: 'Juan 3:16',
+                      verseText: 'Porque de tal manera amó Dios al mundo...',
+                      translationLabel: 'Reina Valera 1909',
+                    );
+                  },
+                  child: const Text('Compartir'),
+                ),
+              ),
+            ),
+          ),
+        );
 
-      expect(find.text('Incluir marca discreta (bible_app)'), findsOneWidget);
-      expect(find.text('Compartir como imagen'), findsOneWidget);
-      expect(find.text('Compartir solo texto'), findsOneWidget);
+        await tester.tap(find.text('Compartir'));
+        await tester.pumpAndSettle();
 
-      // Toggle watermark
-      await tester.tap(switchFinder);
-      await tester.pumpAndSettle();
+        // Verify sheet elements
+        expect(find.text('Compartir Versículo'), findsOneWidget);
+        expect(find.byType(EditorialVerseCardCanvas), findsOneWidget);
+        expect(find.text('Marfil'), findsOneWidget);
+        expect(find.text('Pergamino'), findsOneWidget);
+        expect(find.text('Vigilia'), findsOneWidget);
 
-      expect(tester.takeException(), isNull);
-    });
+        // Switch style to Pergamino
+        await tester.tap(find.text('Pergamino'));
+        await tester.pumpAndSettle();
+
+        // Scroll down to make Switch and buttons visible
+        final switchFinder = find.byType(Switch);
+        await tester.ensureVisible(switchFinder);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Incluir marca discreta (bible_app)'), findsOneWidget);
+        expect(find.text('Compartir como imagen'), findsOneWidget);
+        expect(find.text('Compartir solo texto'), findsOneWidget);
+
+        // Toggle watermark
+        await tester.tap(switchFinder);
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 }

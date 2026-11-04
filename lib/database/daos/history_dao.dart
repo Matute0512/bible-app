@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
 
 import '../app_database.dart';
@@ -224,5 +225,169 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
       ..where((tbl) => tbl.key.equals('last_read'))
       ..limit(1);
     return query.watchSingleOrNull();
+  }
+
+  // ---------------------------------------------------------------------------
+  // User Reading Plans (Thematic Plans)
+  // ---------------------------------------------------------------------------
+
+  /// Fetches a user reading plan by planId.
+  Future<UserReadingPlan?> getUserReadingPlan(String planId) async {
+    final query = select(attachedDatabase.userReadingPlans)
+      ..where((tbl) => tbl.planId.equals(planId))
+      ..limit(1);
+    return query.getSingleOrNull();
+  }
+
+  /// Watches a user reading plan by planId.
+  Stream<UserReadingPlan?> watchUserReadingPlan(String planId) {
+    final query = select(attachedDatabase.userReadingPlans)
+      ..where((tbl) => tbl.planId.equals(planId))
+      ..limit(1);
+    return query.watchSingleOrNull();
+  }
+
+  /// Fetches all user reading plans.
+  Future<List<UserReadingPlan>> getAllUserReadingPlans() async {
+    return select(attachedDatabase.userReadingPlans).get();
+  }
+
+  /// Watches all user reading plans.
+  Stream<List<UserReadingPlan>> watchAllUserReadingPlans() {
+    return select(attachedDatabase.userReadingPlans).watch();
+  }
+
+  /// Upserts or initializes a plan.
+  Future<void> upsertUserReadingPlan({
+    required String planId,
+    required String status,
+    required int startedAtMs,
+    int? completedAtMs,
+    String completedDaysJson = '[]',
+  }) async {
+    await into(attachedDatabase.userReadingPlans).insertOnConflictUpdate(
+      UserReadingPlansCompanion.insert(
+        planId: planId,
+        status: status,
+        startedAtMs: startedAtMs,
+        completedAtMs: Value(completedAtMs),
+        completedDaysJson: Value(completedDaysJson),
+      ),
+    );
+  }
+
+  /// Sets status of a plan ('active', 'pending', 'completed').
+  /// If set to 'active', automatically pauses any other currently 'active' plan.
+  Future<void> setPlanStatus(String planId, String status) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await transaction(() async {
+      final existing = await getUserReadingPlan(planId);
+      final startedAt = existing?.startedAtMs ?? now;
+      final completedDays = existing?.completedDaysJson ?? '[]';
+
+      if (status == 'active') {
+        // Set other active plans to 'pending'
+        await (update(attachedDatabase.userReadingPlans)
+              ..where((tbl) => tbl.status.equals('active') & tbl.planId.equals(planId).not()))
+            .write(const UserReadingPlansCompanion(status: Value('pending')));
+      }
+
+      await into(attachedDatabase.userReadingPlans).insertOnConflictUpdate(
+        UserReadingPlansCompanion.insert(
+          planId: planId,
+          status: status,
+          startedAtMs: startedAt,
+          completedAtMs: status == 'completed' ? Value(now) : const Value(null),
+          completedDaysJson: Value(completedDays),
+        ),
+      );
+    });
+  }
+
+  /// Marks a specific day completed in a plan.
+  /// If [totalDays] is supplied and all days are completed, updates status to 'completed'.
+  Future<void> markPlanDayCompleted(String planId, int dayNumber, {int? totalDays}) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await transaction(() async {
+      final existing = await getUserReadingPlan(planId);
+      Set<int> days = {};
+      if (existing != null) {
+        try {
+          final decoded = jsonDecode(existing.completedDaysJson);
+          if (decoded is List) days = decoded.whereType<int>().toSet();
+        } catch (_) {}
+      }
+
+      days.add(dayNumber);
+      final list = days.toList()..sort();
+      final jsonStr = jsonEncode(list);
+
+      final isAllDone = totalDays != null && days.length >= totalDays;
+      final newStatus = isAllDone ? 'completed' : (existing?.status ?? 'active');
+      final completedAt = isAllDone ? now : (newStatus == 'completed' ? now : null);
+
+      await into(attachedDatabase.userReadingPlans).insertOnConflictUpdate(
+        UserReadingPlansCompanion.insert(
+          planId: planId,
+          status: newStatus,
+          startedAtMs: existing?.startedAtMs ?? now,
+          completedAtMs: Value(completedAt),
+          completedDaysJson: Value(jsonStr),
+        ),
+      );
+    });
+  }
+
+  /// Unmarks a specific day in a plan.
+  Future<void> unmarkPlanDayCompleted(String planId, int dayNumber) async {
+    await transaction(() async {
+      final existing = await getUserReadingPlan(planId);
+      if (existing == null) return;
+
+      Set<int> days = {};
+      try {
+        final decoded = jsonDecode(existing.completedDaysJson);
+        if (decoded is List) days = decoded.whereType<int>().toSet();
+      } catch (_) {}
+
+      days.remove(dayNumber);
+      final list = days.toList()..sort();
+      final jsonStr = jsonEncode(list);
+
+      final newStatus = existing.status == 'completed' ? 'active' : existing.status;
+
+      await into(attachedDatabase.userReadingPlans).insertOnConflictUpdate(
+        UserReadingPlansCompanion.insert(
+          planId: planId,
+          status: newStatus,
+          startedAtMs: existing.startedAtMs,
+          completedAtMs: const Value(null),
+          completedDaysJson: Value(jsonStr),
+        ),
+      );
+    });
+  }
+
+  /// Resets progress of a plan.
+  Future<void> resetPlan(String planId) async {
+    await (delete(attachedDatabase.userReadingPlans)
+          ..where((tbl) => tbl.planId.equals(planId)))
+        .go();
+  }
+
+  /// Watches recent reading history records ordered descending by read date.
+  Stream<List<ReadingHistoryData>> watchReadingHistoryList({int limit = 100}) {
+    final query = select(readingHistory)
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.readAtMs)])
+      ..limit(limit);
+    return query.watch();
+  }
+
+  /// Fetches recent reading history records ordered descending by read date.
+  Future<List<ReadingHistoryData>> getReadingHistoryList({int limit = 100}) {
+    final query = select(readingHistory)
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.readAtMs)])
+      ..limit(limit);
+    return query.get();
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/app_providers.dart';
+import '../providers/thematic_plans_provider.dart';
 import '../theme/bible_theme.dart';
 import '../widgets/graph_explorer.dart';
 
@@ -30,6 +31,8 @@ class StudyScreen extends ConsumerWidget {
     final readingStyle = BibleReadingStyle.of(context);
     final progressAsync = ref.watch(readingProgressProvider);
     final progress = progressAsync.value;
+    final activeThematicPlan = ref.watch(activeThematicPlanProvider);
+    final recentHistoryAsync = ref.watch(readingHistoryRecordsProvider);
 
     return Scaffold(
       backgroundColor: readingStyle.surfaceColor,
@@ -57,7 +60,13 @@ class StudyScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         children: [
           // -----------------------------------------------------------------
-          // 1. Curated Theological Graph Card
+          // 1. Thematic Reading Plans Card (Feature E)
+          // -----------------------------------------------------------------
+          _buildThematicPlansCard(context, ref, activeThematicPlan),
+          const SizedBox(height: 20),
+
+          // -----------------------------------------------------------------
+          // 2. Curated Theological Graph Card
           // -----------------------------------------------------------------
           Container(
             decoration: BoxDecoration(
@@ -188,7 +197,7 @@ class StudyScreen extends ConsumerWidget {
           const SizedBox(height: 20),
 
           // -----------------------------------------------------------------
-          // 2. Personal Study Notebook Card
+          // 3. Personal Study Notebook Card
           // -----------------------------------------------------------------
           Container(
             decoration: BoxDecoration(
@@ -271,7 +280,7 @@ class StudyScreen extends ConsumerWidget {
           const SizedBox(height: 20),
 
           // -----------------------------------------------------------------
-          // 3. Progress and Study Habits Card
+          // 4. Progress and Reading History
           // -----------------------------------------------------------------
           if (progress != null) ...[
             Container(
@@ -333,15 +342,290 @@ class StudyScreen extends ConsumerWidget {
                       ),
                       _buildMetricColumn(
                         context,
-                        value: '${progress.progressPercentage.toStringAsFixed(1)}%',
+                        value:
+                            '${progress.progressPercentage.toStringAsFixed(1)}%',
                         label: 'Biblia leída',
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Historial reciente de lecturas:',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                      color: readingStyle.metaColor,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  recentHistoryAsync.when(
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
+                    data: (records) {
+                      if (records.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            'Aún no hay capítulos registrados. ¡Comenzá tu lectura de hoy!',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontFamily: 'Inter',
+                              color: readingStyle.metaColor,
+                            ),
+                          ),
+                        );
+                      }
+                      final preview = records.take(4).toList();
+                      return Column(
+                        children: preview.map((rec) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.check_circle_outline,
+                                  size: 16,
+                                  color: ReadingPalette.amber,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${rec.bookId} capítulo ${rec.chapterNumber}',
+                                    style:
+                                        theme.textTheme.bodySmall?.copyWith(
+                                      fontFamily: 'Inter',
+                                      fontWeight: FontWeight.w500,
+                                      color: readingStyle.textColor,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  rec.readingDateIso,
+                                  style:
+                                      theme.textTheme.labelSmall?.copyWith(
+                                    fontFamily: 'Inter',
+                                    color: readingStyle.metaColor,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
                   ),
                 ],
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThematicPlansCard(
+    BuildContext context,
+    WidgetRef ref,
+    ActiveThematicPlan? activePlan,
+  ) {
+    final theme = Theme.of(context);
+    final readingStyle = BibleReadingStyle.of(context);
+
+    if (activePlan != null) {
+      final plan = activePlan.plan;
+      final progress = activePlan.progress;
+      final totalDays = plan.durationDays;
+      final percent = progress.percentage(totalDays).toStringAsFixed(0);
+      final nextDay = activePlan.currentOrNextDay;
+
+      return Container(
+        decoration: BoxDecoration(
+          color: readingStyle.cardBackground,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: ReadingPalette.amber.withValues(alpha: 0.6),
+            width: 1.5,
+          ),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: ReadingPalette.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'PLAN ACTIVO',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.8,
+                      color: ReadingPalette.amber,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${progress.completedCount}/$totalDays días ($percent%)',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                    color: readingStyle.metaColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              plan.title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontFamily: 'Lora',
+                fontWeight: FontWeight.bold,
+                color: readingStyle.textColor,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              plan.subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontFamily: 'Inter',
+                color: readingStyle.metaColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: progress.fraction(totalDays),
+                minHeight: 5,
+                backgroundColor:
+                    theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                valueColor:
+                    const AlwaysStoppedAnimation(ReadingPalette.amber),
+              ),
+            ),
+            const SizedBox(height: 14),
+            if (nextDay != null) ...[
+              Text(
+                'Siguiente lectura: ${nextDay.reference} (Día ${nextDay.dayNumber})',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  color: readingStyle.textColor,
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+            Row(
+              children: [
+                if (nextDay != null)
+                  FilledButton(
+                    onPressed: () {
+                      ref.read(dailyReadingProvider.notifier).loadFreeChapter(
+                            nextDay.bookId,
+                            nextDay.bookName,
+                            nextDay.chapter,
+                          );
+                      context.push('/reading');
+                    },
+                    child: const Text('Continuar plan'),
+                  ),
+                const Spacer(),
+                OutlinedButton(
+                  onPressed: () => context.push('/plans'),
+                  child: const Text('Ver planes'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Default invitation card when no thematic plan is active
+    return Container(
+      decoration: BoxDecoration(
+        color: readingStyle.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer
+                      .withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.auto_stories_outlined,
+                  color: theme.colorScheme.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Planes de Lectura Temáticos',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontFamily: 'Lora',
+                        fontWeight: FontWeight.bold,
+                        color: readingStyle.textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Recorridos de 14, 21 y 30 días',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: 'Inter',
+                        color: readingStyle.metaColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Profundizá en Salmos para el alma, el Evangelio de Juan, la sabiduría de Proverbios o pasajes de consuelo y paz en la tormenta.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'Inter',
+              color: readingStyle.textColor,
+              height: 1.45,
+              fontSize: 13.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.tonalIcon(
+              onPressed: () => context.push('/plans'),
+              icon: const Icon(Icons.library_books_outlined, size: 18),
+              label: const Text(
+                'Explorar catálogo de planes',
+                style: TextStyle(fontFamily: 'Inter'),
+              ),
+            ),
+          ),
         ],
       ),
     );

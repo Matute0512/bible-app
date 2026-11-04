@@ -74,14 +74,10 @@ class _VerseShareSheetState extends State<VerseShareSheet> {
   }
 
   void _shareAsText() {
-    final text = '«${widget.verseText}»\n— ${widget.reference}'
+    final text =
+        '«${widget.verseText}»\n— ${widget.reference}'
         '${widget.translationLabel != null ? ' (${widget.translationLabel})' : ''}';
-    SharePlus.instance.share(
-      ShareParams(
-        text: text,
-        title: widget.reference,
-      ),
-    );
+    SharePlus.instance.share(ShareParams(text: text, title: widget.reference));
     Navigator.of(context).pop();
   }
 
@@ -113,7 +109,9 @@ class _VerseShareSheetState extends State<VerseShareSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.6,
+                  ),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -184,14 +182,16 @@ class _VerseShareSheetState extends State<VerseShareSheet> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         backgroundColor: isSelected
-                            ? theme.colorScheme.primaryContainer
-                                .withValues(alpha: 0.35)
+                            ? theme.colorScheme.primaryContainer.withValues(
+                                alpha: 0.35,
+                              )
                             : Colors.transparent,
                         side: BorderSide(
                           color: isSelected
                               ? theme.colorScheme.primary
-                              : theme.colorScheme.outlineVariant
-                                  .withValues(alpha: 0.5),
+                              : theme.colorScheme.outlineVariant.withValues(
+                                  alpha: 0.5,
+                                ),
                           width: isSelected ? 2 : 1,
                         ),
                         shape: RoundedRectangleBorder(
@@ -216,7 +216,9 @@ class _VerseShareSheetState extends State<VerseShareSheet> {
                           const SizedBox(width: 6),
                           Flexible(
                             child: Text(
-                              style.label.split(' ')[0], // 'Marfil', 'Pergamino', 'Vigilia'
+                              style.label.split(
+                                ' ',
+                              )[0], // 'Marfil', 'Pergamino', 'Vigilia'
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontFamily: 'Inter',
@@ -275,7 +277,10 @@ class _VerseShareSheetState extends State<VerseShareSheet> {
                   : const Icon(Icons.image_outlined, size: 20),
               label: Text(
                 _isExporting ? 'Generando imagen...' : 'Compartir como imagen',
-                style: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),

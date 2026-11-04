@@ -1,0 +1,820 @@
+{
+  "plans": [
+    {
+      "id": "salmos_30_dias",
+      "title": "Salmos para el Alma",
+      "subtitle": "30 días de oración, consuelo y alabanza",
+      "description": "Un recorrido devocional por los salmos más significativos del salterio bíblico para fortalecer tu vida de oración y confianza en Dios.",
+      "category": "Oración y Alabanza",
+      "durationDays": 30,
+      "iconName": "menu_book",
+      "accentColorHex": "#8B5E34",
+      "days": [
+        {
+          "dayNumber": 1,
+          "title": "Los dos caminos",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 1,
+          "theme": "Bienaventuranza y la ley del Señor"
+        },
+        {
+          "dayNumber": 2,
+          "title": "La gloria del Creador",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 8,
+          "theme": "Dignidad humana y majestad divina"
+        },
+        {
+          "dayNumber": 3,
+          "title": "La creación y la Palabra",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 19,
+          "theme": "El testimonio de los cielos"
+        },
+        {
+          "dayNumber": 4,
+          "title": "El buen Pastor",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 23,
+          "theme": "Confianza y cuidado en el valle"
+        },
+        {
+          "dayNumber": 5,
+          "title": "Luz y salvación",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 27,
+          "theme": "Valentía en tiempos de adversidad"
+        },
+        {
+          "dayNumber": 6,
+          "title": "Gusto por la bondad divina",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 34,
+          "theme": "Cercano a los quebrantados de corazón"
+        },
+        {
+          "dayNumber": 7,
+          "title": "Sed del Dios vivo",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 42,
+          "theme": "Esperanza en medio de la desolación"
+        },
+        {
+          "dayNumber": 8,
+          "title": "Refugio y fortaleza",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 46,
+          "theme": "Estad quietos y sabed que yo soy Dios"
+        },
+        {
+          "dayNumber": 9,
+          "title": "Plegaria de arrepentimiento",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 51,
+          "theme": "Crea en mí un corazón limpio"
+        },
+        {
+          "dayNumber": 10,
+          "title": "Anhelo matutino de Dios",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 63,
+          "theme": "Mejor es tu misericordia que la vida"
+        },
+        {
+          "dayNumber": 11,
+          "title": "Cercanía de Dios en la duda",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 73,
+          "theme": "Pero en cuanto a mí, el acercarme a Dios es el bien"
+        },
+        {
+          "dayNumber": 12,
+          "title": "Los atrios del Señor",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 84,
+          "theme": "Un día en tus atrios es mejor que mil fuera de ellos"
+        },
+        {
+          "dayNumber": 13,
+          "title": "De eternidad a eternidad",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 90,
+          "theme": "Enséñanos a contar nuestros días"
+        },
+        {
+          "dayNumber": 14,
+          "title": "La sombra del Omnipotente",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 91,
+          "theme": "Protección bajo sus alas"
+        },
+        {
+          "dayNumber": 15,
+          "title": "Cántico de gozo y gratitud",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 100,
+          "theme": "Entrad por sus puertas con acción de gracias"
+        },
+        {
+          "dayNumber": 16,
+          "title": "Bendice, alma mía, al Señor",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 103,
+          "theme": "Misericordia tan alta como los cielos"
+        },
+        {
+          "dayNumber": 17,
+          "title": "El himno cósmico",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 104,
+          "theme": "Providencia divina sobre toda criatura"
+        },
+        {
+          "dayNumber": 18,
+          "title": "Acción de gracias por la liberación",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 116,
+          "theme": "¿Qué pagaré al Señor por todos sus beneficios?"
+        },
+        {
+          "dayNumber": 19,
+          "title": "Lámpara a mis pies",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 119,
+          "theme": "Amor insondable por la Palabra"
+        },
+        {
+          "dayNumber": 20,
+          "title": "Mi socorro viene del Señor",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 121,
+          "theme": "El guardián que no duerme"
+        },
+        {
+          "dayNumber": 21,
+          "title": "Cántico de retorno del cautiverio",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 126,
+          "theme": "Los que sembraron con lágrimas segarán con regocijo"
+        },
+        {
+          "dayNumber": 22,
+          "title": "Desde lo profundo",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 130,
+          "theme": "En el Señor hay abundante redención"
+        },
+        {
+          "dayNumber": 23,
+          "title": "La comunión fraternal",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 133,
+          "theme": "¡Mirad cuán bueno y cuán delicioso es habitar juntos!"
+        },
+        {
+          "dayNumber": 24,
+          "title": "Eterna es su misericordia",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 136,
+          "theme": "La letanía de fidelidad histórica"
+        },
+        {
+          "dayNumber": 25,
+          "title": "El conocimiento perfecto de Dios",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 139,
+          "theme": "Omnipresencia y asombro por la vida"
+        },
+        {
+          "dayNumber": 26,
+          "title": "Clamor en la soledad",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 142,
+          "theme": "Tú eres mi refugio y mi porción"
+        },
+        {
+          "dayNumber": 27,
+          "title": "La grandeza insondable del Rey",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 145,
+          "theme": "Generación a generación celebrará tus obras"
+        },
+        {
+          "dayNumber": 28,
+          "title": "Confianza exclusiva en Dios",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 146,
+          "theme": "El Dios que hace justicia a los oprimidos"
+        },
+        {
+          "dayNumber": 29,
+          "title": "Alabanza universal de la creación",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 148,
+          "theme": "Cielos, estrellas y abismos"
+        },
+        {
+          "dayNumber": 30,
+          "title": "La gran sinfonía final",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 150,
+          "theme": "Todo lo que respira alabe al Señor"
+        }
+      ]
+    },
+    {
+      "id": "conocer_a_jesus_21",
+      "title": "Conocer a Jesús: Evangelio de Juan",
+      "subtitle": "21 días contemplando la vida, palabras y milagros de Cristo",
+      "description": "Una inmersión capítulo a capítulo en el Evangelio según San Juan para contemplar la divinidad, compasión y resurrección de Jesucristo.",
+      "category": "Evangelio",
+      "durationDays": 21,
+      "iconName": "auto_stories",
+      "accentColorHex": "#2E5B88",
+      "days": [
+        {
+          "dayNumber": 1,
+          "title": "Juan 1",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 1,
+          "theme": "Lectura del capítulo 1 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 2,
+          "title": "Juan 2",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 2,
+          "theme": "Lectura del capítulo 2 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 3,
+          "title": "Juan 3",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 3,
+          "theme": "Lectura del capítulo 3 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 4,
+          "title": "Juan 4",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 4,
+          "theme": "Lectura del capítulo 4 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 5,
+          "title": "Juan 5",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 5,
+          "theme": "Lectura del capítulo 5 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 6,
+          "title": "Juan 6",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 6,
+          "theme": "Lectura del capítulo 6 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 7,
+          "title": "Juan 7",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 7,
+          "theme": "Lectura del capítulo 7 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 8,
+          "title": "Juan 8",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 8,
+          "theme": "Lectura del capítulo 8 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 9,
+          "title": "Juan 9",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 9,
+          "theme": "Lectura del capítulo 9 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 10,
+          "title": "Juan 10",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 10,
+          "theme": "Lectura del capítulo 10 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 11,
+          "title": "Juan 11",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 11,
+          "theme": "Lectura del capítulo 11 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 12,
+          "title": "Juan 12",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 12,
+          "theme": "Lectura del capítulo 12 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 13,
+          "title": "Juan 13",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 13,
+          "theme": "Lectura del capítulo 13 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 14,
+          "title": "Juan 14",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 14,
+          "theme": "Lectura del capítulo 14 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 15,
+          "title": "Juan 15",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 15,
+          "theme": "Lectura del capítulo 15 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 16,
+          "title": "Juan 16",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 16,
+          "theme": "Lectura del capítulo 16 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 17,
+          "title": "Juan 17",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 17,
+          "theme": "Lectura del capítulo 17 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 18,
+          "title": "Juan 18",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 18,
+          "theme": "Lectura del capítulo 18 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 19,
+          "title": "Juan 19",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 19,
+          "theme": "Lectura del capítulo 19 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 20,
+          "title": "Juan 20",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 20,
+          "theme": "Lectura del capítulo 20 del Evangelio de Juan"
+        },
+        {
+          "dayNumber": 21,
+          "title": "Juan 21",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 21,
+          "theme": "Lectura del capítulo 21 del Evangelio de Juan"
+        }
+      ]
+    },
+    {
+      "id": "sabiduria_proverbios_31",
+      "title": "Sabiduría Cotidiana: Proverbios",
+      "subtitle": "31 días de prudencia, discernimiento y vida práctica",
+      "description": "Un capítulo de Proverbios para cada día del mes. Principios atemporales sobre el trabajo, la palabra, las amistades y el temor del Señor.",
+      "category": "Sabiduría",
+      "durationDays": 31,
+      "iconName": "lightbulb_outline",
+      "accentColorHex": "#7B6F3E",
+      "days": [
+        {
+          "dayNumber": 1,
+          "title": "Proverbios 1",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 1,
+          "theme": "Principios de sabiduría en Proverbios 1"
+        },
+        {
+          "dayNumber": 2,
+          "title": "Proverbios 2",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 2,
+          "theme": "Principios de sabiduría en Proverbios 2"
+        },
+        {
+          "dayNumber": 3,
+          "title": "Proverbios 3",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 3,
+          "theme": "Principios de sabiduría en Proverbios 3"
+        },
+        {
+          "dayNumber": 4,
+          "title": "Proverbios 4",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 4,
+          "theme": "Principios de sabiduría en Proverbios 4"
+        },
+        {
+          "dayNumber": 5,
+          "title": "Proverbios 5",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 5,
+          "theme": "Principios de sabiduría en Proverbios 5"
+        },
+        {
+          "dayNumber": 6,
+          "title": "Proverbios 6",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 6,
+          "theme": "Principios de sabiduría en Proverbios 6"
+        },
+        {
+          "dayNumber": 7,
+          "title": "Proverbios 7",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 7,
+          "theme": "Principios de sabiduría en Proverbios 7"
+        },
+        {
+          "dayNumber": 8,
+          "title": "Proverbios 8",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 8,
+          "theme": "Principios de sabiduría en Proverbios 8"
+        },
+        {
+          "dayNumber": 9,
+          "title": "Proverbios 9",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 9,
+          "theme": "Principios de sabiduría en Proverbios 9"
+        },
+        {
+          "dayNumber": 10,
+          "title": "Proverbios 10",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 10,
+          "theme": "Principios de sabiduría en Proverbios 10"
+        },
+        {
+          "dayNumber": 11,
+          "title": "Proverbios 11",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 11,
+          "theme": "Principios de sabiduría en Proverbios 11"
+        },
+        {
+          "dayNumber": 12,
+          "title": "Proverbios 12",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 12,
+          "theme": "Principios de sabiduría en Proverbios 12"
+        },
+        {
+          "dayNumber": 13,
+          "title": "Proverbios 13",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 13,
+          "theme": "Principios de sabiduría en Proverbios 13"
+        },
+        {
+          "dayNumber": 14,
+          "title": "Proverbios 14",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 14,
+          "theme": "Principios de sabiduría en Proverbios 14"
+        },
+        {
+          "dayNumber": 15,
+          "title": "Proverbios 15",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 15,
+          "theme": "Principios de sabiduría en Proverbios 15"
+        },
+        {
+          "dayNumber": 16,
+          "title": "Proverbios 16",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 16,
+          "theme": "Principios de sabiduría en Proverbios 16"
+        },
+        {
+          "dayNumber": 17,
+          "title": "Proverbios 17",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 17,
+          "theme": "Principios de sabiduría en Proverbios 17"
+        },
+        {
+          "dayNumber": 18,
+          "title": "Proverbios 18",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 18,
+          "theme": "Principios de sabiduría en Proverbios 18"
+        },
+        {
+          "dayNumber": 19,
+          "title": "Proverbios 19",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 19,
+          "theme": "Principios de sabiduría en Proverbios 19"
+        },
+        {
+          "dayNumber": 20,
+          "title": "Proverbios 20",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 20,
+          "theme": "Principios de sabiduría en Proverbios 20"
+        },
+        {
+          "dayNumber": 21,
+          "title": "Proverbios 21",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 21,
+          "theme": "Principios de sabiduría en Proverbios 21"
+        },
+        {
+          "dayNumber": 22,
+          "title": "Proverbios 22",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 22,
+          "theme": "Principios de sabiduría en Proverbios 22"
+        },
+        {
+          "dayNumber": 23,
+          "title": "Proverbios 23",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 23,
+          "theme": "Principios de sabiduría en Proverbios 23"
+        },
+        {
+          "dayNumber": 24,
+          "title": "Proverbios 24",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 24,
+          "theme": "Principios de sabiduría en Proverbios 24"
+        },
+        {
+          "dayNumber": 25,
+          "title": "Proverbios 25",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 25,
+          "theme": "Principios de sabiduría en Proverbios 25"
+        },
+        {
+          "dayNumber": 26,
+          "title": "Proverbios 26",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 26,
+          "theme": "Principios de sabiduría en Proverbios 26"
+        },
+        {
+          "dayNumber": 27,
+          "title": "Proverbios 27",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 27,
+          "theme": "Principios de sabiduría en Proverbios 27"
+        },
+        {
+          "dayNumber": 28,
+          "title": "Proverbios 28",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 28,
+          "theme": "Principios de sabiduría en Proverbios 28"
+        },
+        {
+          "dayNumber": 29,
+          "title": "Proverbios 29",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 29,
+          "theme": "Principios de sabiduría en Proverbios 29"
+        },
+        {
+          "dayNumber": 30,
+          "title": "Proverbios 30",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 30,
+          "theme": "Principios de sabiduría en Proverbios 30"
+        },
+        {
+          "dayNumber": 31,
+          "title": "Proverbios 31",
+          "bookId": "PRO",
+          "bookName": "Proverbios",
+          "chapter": 31,
+          "theme": "Principios de sabiduría en Proverbios 31"
+        }
+      ]
+    },
+    {
+      "id": "esperanza_paz_14",
+      "title": "Paz en la Tormenta",
+      "subtitle": "14 días de serenidad y consuelo para momentos de dificultad",
+      "description": "Pasajes clave de las Escrituras seleccionados para traer aliento, serenidad y perspectiva eterna frente a la ansiedad y la incertidumbre.",
+      "category": "Fortaleza",
+      "durationDays": 14,
+      "iconName": "shield_outlined",
+      "accentColorHex": "#3D6B58",
+      "days": [
+        {
+          "dayNumber": 1,
+          "title": "Más que vencedores",
+          "bookId": "ROM",
+          "bookName": "Romanos",
+          "chapter": 8,
+          "theme": "Ninguna condenación ni separación del amor de Dios"
+        },
+        {
+          "dayNumber": 2,
+          "title": "La paz que sobrepasa el entendimiento",
+          "bookId": "PHP",
+          "bookName": "Filipenses",
+          "chapter": 4,
+          "theme": "Por nada estéis afanosos"
+        },
+        {
+          "dayNumber": 3,
+          "title": "Consuelo al pueblo",
+          "bookId": "ISA",
+          "bookName": "Isaías",
+          "chapter": 40,
+          "theme": "Los que esperan en el Señor renovarán sus fuerzas"
+        },
+        {
+          "dayNumber": 4,
+          "title": "No temas, porque yo estoy contigo",
+          "bookId": "ISA",
+          "bookName": "Isaías",
+          "chapter": 41,
+          "theme": "Te tomo de tu mano derecha"
+        },
+        {
+          "dayNumber": 5,
+          "title": "El afán y la providencia",
+          "bookId": "MAT",
+          "bookName": "Mateo",
+          "chapter": 6,
+          "theme": "Mirad las aves del cielo y los lirios"
+        },
+        {
+          "dayNumber": 6,
+          "title": "El buen Pastor",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 23,
+          "theme": "Nada me faltará"
+        },
+        {
+          "dayNumber": 7,
+          "title": "Dios es nuestro amparo",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 46,
+          "theme": "Río cuyas corrientes alegran la ciudad de Dios"
+        },
+        {
+          "dayNumber": 8,
+          "title": "La morada del Altísimo",
+          "bookId": "PSA",
+          "bookName": "Salmos",
+          "chapter": 91,
+          "theme": "Te librará del lazo del cazador"
+        },
+        {
+          "dayNumber": 9,
+          "title": "No se turbe vuestro corazón",
+          "bookId": "JHN",
+          "bookName": "Juan",
+          "chapter": 14,
+          "theme": "La paz os dejo, mi paz os doy"
+        },
+        {
+          "dayNumber": 10,
+          "title": "Vasos de barro",
+          "bookId": "2CO",
+          "bookName": "2 Corintios",
+          "chapter": 4,
+          "theme": "Atribulados en todo, mas no angustiados"
+        },
+        {
+          "dayNumber": 11,
+          "title": "La galería de la fe",
+          "bookId": "HEB",
+          "bookName": "Hebreos",
+          "chapter": 11,
+          "theme": "La certeza de lo que se espera"
+        },
+        {
+          "dayNumber": 12,
+          "title": "Echando toda ansiedad sobre Él",
+          "bookId": "1PE",
+          "bookName": "1 Pedro",
+          "chapter": 5,
+          "theme": "Porque Él tiene cuidado de vosotros"
+        },
+        {
+          "dayNumber": 13,
+          "title": "Cielos nuevos y tierra nueva",
+          "bookId": "REV",
+          "bookName": "Apocalipsis",
+          "chapter": 21,
+          "theme": "Enjugará Dios toda lágrima"
+        },
+        {
+          "dayNumber": 14,
+          "title": "El río de agua de vida",
+          "bookId": "REV",
+          "bookName": "Apocalipsis",
+          "chapter": 22,
+          "theme": "Ciertamente vengo en breve"
+        }
+      ]
+    }
+  ]
+}
