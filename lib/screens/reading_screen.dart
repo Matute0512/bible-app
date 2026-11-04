@@ -7,11 +7,13 @@ import '../providers/app_providers.dart';
 import '../services/reading_plan_service.dart';
 import '../theme/bible_theme.dart';
 import '../widgets/graph_explorer.dart';
+import '../widgets/reader/chapter_completion_card.dart';
 import '../widgets/reader/chapter_header.dart';
 import '../widgets/reader/settings_sheet.dart';
 import '../widgets/reader/verse_list_item.dart';
 import '../widgets/verse_shimmer.dart';
 
+export '../widgets/reader/chapter_completion_card.dart';
 export '../widgets/reader/chapter_header.dart';
 export '../widgets/reader/settings_sheet.dart';
 export '../widgets/reader/verse_list_item.dart';
@@ -332,18 +334,32 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(24, 6, 24, 40),
-            itemCount: chapter.verses.length,
-            itemBuilder: (context, index) => VerseListItem(
-              verse: chapter.verses[index],
-              index: index,
-              verseCount: chapter.verses.length,
-              entranceAnimation: _entrance,
-              fontSizeMultiplier: fontSizeMultiplier,
-              onTap: () => _openGraphExplorer(
-                chapter,
-                fromVerse: chapter.verses[index].number,
-              ),
-            ),
+            itemCount: chapter.verses.length + 1,
+            itemBuilder: (context, index) {
+              if (index == chapter.verses.length) {
+                final translationId =
+                    ref.watch(userPreferencesProvider).value?.translationId ??
+                        'spa_rvg';
+                return ChapterCompletionCard(
+                  chapter: chapter,
+                  translationId: translationId,
+                  source: (state is FreeReadingLoaded)
+                      ? 'free_reading'
+                      : 'daily_plan',
+                );
+              }
+              return VerseListItem(
+                verse: chapter.verses[index],
+                index: index,
+                verseCount: chapter.verses.length,
+                entranceAnimation: _entrance,
+                fontSizeMultiplier: fontSizeMultiplier,
+                onTap: () => _openGraphExplorer(
+                  chapter,
+                  fromVerse: chapter.verses[index].number,
+                ),
+              );
+            },
           ),
         ),
       ],
