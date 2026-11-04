@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 /// User highlights, favorites, and personal notes keyed by canonical Bible coordinates.
+@DataClassName('VerseAnnotationRow')
 class VerseAnnotations extends Table {
   TextColumn get id => text()();
   TextColumn get bookId => text()();
@@ -19,4 +20,3 @@ class VerseAnnotations extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
-

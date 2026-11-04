@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'daos/bible_cache_dao.dart';
 import 'daos/history_dao.dart';
+import 'daos/study_dao.dart';
 import 'tables/cached_books_table.dart';
 import 'tables/cached_chapters_table.dart';
 import 'tables/cached_verses_table.dart';
@@ -26,7 +27,7 @@ part 'app_database.g.dart';
     ReadingProgressState,
     UserReadingPlans,
   ],
-  daos: [BibleCacheDao, HistoryDao],
+  daos: [BibleCacheDao, HistoryDao, StudyDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection()) {

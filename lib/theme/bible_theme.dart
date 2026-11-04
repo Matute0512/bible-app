@@ -47,6 +47,12 @@ abstract final class ReadingPalette {
 
   /// Soft amber hairline visible on sepia surfaces.
   static const Color amberDividerSepia = Color(0x4DD4A017);
+
+  /// Editorial highlight swatches (solid colors for UI selector buttons)
+  static const Color swatchOchre = Color(0xFFD4A017);
+  static const Color swatchOlive = Color(0xFF6A8050);
+  static const Color swatchTerracotta = Color(0xFFC06C54);
+  static const Color swatchIndigo = Color(0xFF5B4F82);
 }
 
 /// Typography and surface tokens describing how a chapter is presented.
@@ -65,6 +71,10 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
     required this.navBarBackground,
     required this.chipSurface,
     required this.chipBorder,
+    required this.highlightOchre,
+    required this.highlightOlive,
+    required this.highlightTerracotta,
+    required this.highlightIndigo,
   });
 
   /// Background behind the biblical text (avoids pure white glare).
@@ -90,6 +100,18 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
 
   /// Border color of the connection chips.
   final Color chipBorder;
+
+  /// Translucent tint for Ochre verse highlight.
+  final Color highlightOchre;
+
+  /// Translucent tint for Olive verse highlight.
+  final Color highlightOlive;
+
+  /// Translucent tint for Terracotta verse highlight.
+  final Color highlightTerracotta;
+
+  /// Translucent tint for Indigo verse highlight.
+  final Color highlightIndigo;
 
   /// Whether this theme extension represents the Sepia variant.
   bool get isSepia => readingBackground == ReadingPalette.sepiaSurface;
@@ -126,6 +148,10 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
       fontWeight: FontWeight.w600,
       color: ReadingPalette.amber,
     ),
+    highlightOchre: const Color(0x52E6B800),
+    highlightOlive: const Color(0x406A8050),
+    highlightTerracotta: const Color(0x3DC06C54),
+    highlightIndigo: const Color(0x334A3B76),
   );
 
   static final BibleReadingStyle sepia = BibleReadingStyle(
@@ -151,6 +177,10 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
       fontWeight: FontWeight.w600,
       color: ReadingPalette.amber,
     ),
+    highlightOchre: const Color(0x55D4A017),
+    highlightOlive: const Color(0x42556B2F),
+    highlightTerracotta: const Color(0x42A9523C),
+    highlightIndigo: const Color(0x384A3B76),
   );
 
   static final BibleReadingStyle dark = BibleReadingStyle(
@@ -176,12 +206,28 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
       fontWeight: FontWeight.w600,
       color: ReadingPalette.amberLight,
     ),
+    highlightOchre: const Color(0x4DE3B23C),
+    highlightOlive: const Color(0x487D995F),
+    highlightTerracotta: const Color(0x4DC97B63),
+    highlightIndigo: const Color(0x476E5B9E),
   );
 
   /// Returns the body style scaled by [multiplier] (the user's font slider).
   ///
   /// The system text scale factor is applied on top of it automatically by the
   /// [Text] widgets, so both accessibility levers compose instead of fighting.
+  /// Returns the corresponding translucent highlight background color by name.
+  Color? highlightColorFor(String? colorName) {
+    if (colorName == null) return null;
+    return switch (colorName.toLowerCase()) {
+      'ochre' => highlightOchre,
+      'olive' => highlightOlive,
+      'terracotta' => highlightTerracotta,
+      'indigo' => highlightIndigo,
+      _ => null,
+    };
+  }
+
   TextStyle readingText(double multiplier) =>
       bodyText.copyWith(fontSize: baseBodyFontSize * multiplier);
 
@@ -195,6 +241,10 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
     Color? navBarBackground,
     Color? chipSurface,
     Color? chipBorder,
+    Color? highlightOchre,
+    Color? highlightOlive,
+    Color? highlightTerracotta,
+    Color? highlightIndigo,
   }) {
     return BibleReadingStyle(
       readingBackground: readingBackground ?? this.readingBackground,
@@ -205,6 +255,10 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
       navBarBackground: navBarBackground ?? this.navBarBackground,
       chipSurface: chipSurface ?? this.chipSurface,
       chipBorder: chipBorder ?? this.chipBorder,
+      highlightOchre: highlightOchre ?? this.highlightOchre,
+      highlightOlive: highlightOlive ?? this.highlightOlive,
+      highlightTerracotta: highlightTerracotta ?? this.highlightTerracotta,
+      highlightIndigo: highlightIndigo ?? this.highlightIndigo,
     );
   }
 
@@ -230,6 +284,10 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
       bodyText: TextStyle.lerp(bodyText, other.bodyText, t)!,
       verseNumber: TextStyle.lerp(verseNumber, other.verseNumber, t)!,
       chapterTitle: TextStyle.lerp(chapterTitle, other.chapterTitle, t)!,
+      highlightOchre: Color.lerp(highlightOchre, other.highlightOchre, t)!,
+      highlightOlive: Color.lerp(highlightOlive, other.highlightOlive, t)!,
+      highlightTerracotta: Color.lerp(highlightTerracotta, other.highlightTerracotta, t)!,
+      highlightIndigo: Color.lerp(highlightIndigo, other.highlightIndigo, t)!,
     );
   }
 }

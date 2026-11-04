@@ -1422,7 +1422,7 @@ class CachedVersesCompanion extends UpdateCompanion<CachedVerse> {
 }
 
 class $VerseAnnotationsTable extends VerseAnnotations
-    with TableInfo<$VerseAnnotationsTable, VerseAnnotation> {
+    with TableInfo<$VerseAnnotationsTable, VerseAnnotationRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1594,7 +1594,7 @@ class $VerseAnnotationsTable extends VerseAnnotations
   static const String $name = 'verse_annotations';
   @override
   VerificationContext validateIntegrity(
-    Insertable<VerseAnnotation> instance, {
+    Insertable<VerseAnnotationRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -1722,9 +1722,9 @@ class $VerseAnnotationsTable extends VerseAnnotations
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  VerseAnnotation map(Map<String, dynamic> data, {String? tablePrefix}) {
+  VerseAnnotationRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return VerseAnnotation(
+    return VerseAnnotationRow(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
@@ -1786,7 +1786,8 @@ class $VerseAnnotationsTable extends VerseAnnotations
   }
 }
 
-class VerseAnnotation extends DataClass implements Insertable<VerseAnnotation> {
+class VerseAnnotationRow extends DataClass
+    implements Insertable<VerseAnnotationRow> {
   final String id;
   final String bookId;
   final int chapterNumber;
@@ -1800,7 +1801,7 @@ class VerseAnnotation extends DataClass implements Insertable<VerseAnnotation> {
   final String verseTextSnapshot;
   final int createdAtMs;
   final int updatedAtMs;
-  const VerseAnnotation({
+  const VerseAnnotationRow({
     required this.id,
     required this.bookId,
     required this.chapterNumber,
@@ -1864,12 +1865,12 @@ class VerseAnnotation extends DataClass implements Insertable<VerseAnnotation> {
     );
   }
 
-  factory VerseAnnotation.fromJson(
+  factory VerseAnnotationRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return VerseAnnotation(
+    return VerseAnnotationRow(
       id: serializer.fromJson<String>(json['id']),
       bookId: serializer.fromJson<String>(json['bookId']),
       chapterNumber: serializer.fromJson<int>(json['chapterNumber']),
@@ -1907,7 +1908,7 @@ class VerseAnnotation extends DataClass implements Insertable<VerseAnnotation> {
     };
   }
 
-  VerseAnnotation copyWith({
+  VerseAnnotationRow copyWith({
     String? id,
     String? bookId,
     int? chapterNumber,
@@ -1921,7 +1922,7 @@ class VerseAnnotation extends DataClass implements Insertable<VerseAnnotation> {
     String? verseTextSnapshot,
     int? createdAtMs,
     int? updatedAtMs,
-  }) => VerseAnnotation(
+  }) => VerseAnnotationRow(
     id: id ?? this.id,
     bookId: bookId ?? this.bookId,
     chapterNumber: chapterNumber ?? this.chapterNumber,
@@ -1938,8 +1939,8 @@ class VerseAnnotation extends DataClass implements Insertable<VerseAnnotation> {
     createdAtMs: createdAtMs ?? this.createdAtMs,
     updatedAtMs: updatedAtMs ?? this.updatedAtMs,
   );
-  VerseAnnotation copyWithCompanion(VerseAnnotationsCompanion data) {
-    return VerseAnnotation(
+  VerseAnnotationRow copyWithCompanion(VerseAnnotationsCompanion data) {
+    return VerseAnnotationRow(
       id: data.id.present ? data.id.value : this.id,
       bookId: data.bookId.present ? data.bookId.value : this.bookId,
       chapterNumber: data.chapterNumber.present
@@ -1976,7 +1977,7 @@ class VerseAnnotation extends DataClass implements Insertable<VerseAnnotation> {
 
   @override
   String toString() {
-    return (StringBuffer('VerseAnnotation(')
+    return (StringBuffer('VerseAnnotationRow(')
           ..write('id: $id, ')
           ..write('bookId: $bookId, ')
           ..write('chapterNumber: $chapterNumber, ')
@@ -2013,7 +2014,7 @@ class VerseAnnotation extends DataClass implements Insertable<VerseAnnotation> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is VerseAnnotation &&
+      (other is VerseAnnotationRow &&
           other.id == this.id &&
           other.bookId == this.bookId &&
           other.chapterNumber == this.chapterNumber &&
@@ -2029,7 +2030,7 @@ class VerseAnnotation extends DataClass implements Insertable<VerseAnnotation> {
           other.updatedAtMs == this.updatedAtMs);
 }
 
-class VerseAnnotationsCompanion extends UpdateCompanion<VerseAnnotation> {
+class VerseAnnotationsCompanion extends UpdateCompanion<VerseAnnotationRow> {
   final Value<String> id;
   final Value<String> bookId;
   final Value<int> chapterNumber;
@@ -2084,7 +2085,7 @@ class VerseAnnotationsCompanion extends UpdateCompanion<VerseAnnotation> {
        verseTextSnapshot = Value(verseTextSnapshot),
        createdAtMs = Value(createdAtMs),
        updatedAtMs = Value(updatedAtMs);
-  static Insertable<VerseAnnotation> custom({
+  static Insertable<VerseAnnotationRow> custom({
     Expression<String>? id,
     Expression<String>? bookId,
     Expression<int>? chapterNumber,
@@ -3632,6 +3633,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final BibleCacheDao bibleCacheDao = BibleCacheDao(this as AppDatabase);
   late final HistoryDao historyDao = HistoryDao(this as AppDatabase);
+  late final StudyDao studyDao = StudyDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4652,21 +4654,21 @@ class $$VerseAnnotationsTableTableManager
         RootTableManager<
           _$AppDatabase,
           $VerseAnnotationsTable,
-          VerseAnnotation,
+          VerseAnnotationRow,
           $$VerseAnnotationsTableFilterComposer,
           $$VerseAnnotationsTableOrderingComposer,
           $$VerseAnnotationsTableAnnotationComposer,
           $$VerseAnnotationsTableCreateCompanionBuilder,
           $$VerseAnnotationsTableUpdateCompanionBuilder,
           (
-            VerseAnnotation,
+            VerseAnnotationRow,
             BaseReferences<
               _$AppDatabase,
               $VerseAnnotationsTable,
-              VerseAnnotation
+              VerseAnnotationRow
             >,
           ),
-          VerseAnnotation,
+          VerseAnnotationRow,
           PrefetchHooks Function()
         > {
   $$VerseAnnotationsTableTableManager(
@@ -4749,11 +4751,13 @@ class $$VerseAnnotationsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$VerseAnnotationsTable, VerseAnnotation>(table),
+                  e.readTable<$VerseAnnotationsTable, VerseAnnotationRow>(
+                    table,
+                  ),
                   BaseReferences<
                     _$AppDatabase,
                     $VerseAnnotationsTable,
-                    VerseAnnotation
+                    VerseAnnotationRow
                   >(db, table, e),
                 ),
               )
@@ -4767,17 +4771,21 @@ typedef $$VerseAnnotationsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
       $VerseAnnotationsTable,
-      VerseAnnotation,
+      VerseAnnotationRow,
       $$VerseAnnotationsTableFilterComposer,
       $$VerseAnnotationsTableOrderingComposer,
       $$VerseAnnotationsTableAnnotationComposer,
       $$VerseAnnotationsTableCreateCompanionBuilder,
       $$VerseAnnotationsTableUpdateCompanionBuilder,
       (
-        VerseAnnotation,
-        BaseReferences<_$AppDatabase, $VerseAnnotationsTable, VerseAnnotation>,
+        VerseAnnotationRow,
+        BaseReferences<
+          _$AppDatabase,
+          $VerseAnnotationsTable,
+          VerseAnnotationRow
+        >,
       ),
-      VerseAnnotation,
+      VerseAnnotationRow,
       PrefetchHooks Function()
     >;
 typedef $$ReadingHistoryTableCreateCompanionBuilder =
