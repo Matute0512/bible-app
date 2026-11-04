@@ -64,6 +64,21 @@ class BibleCacheDao extends DatabaseAccessor<AppDatabase> with _$BibleCacheDaoMi
   }
 
   /// Checks if a specific chapter is cached locally.
+  /// Returns a set of all cached chapter numbers for [bookId] and [translationId].
+  Future<Set<int>> getCachedChapterNumbers({
+    required String translationId,
+    required String bookId,
+  }) async {
+    final rows = await (select(cachedChapters)
+          ..where(
+            (tbl) =>
+                tbl.translationId.equals(translationId) &
+                tbl.bookId.equals(bookId),
+          ))
+        .get();
+    return rows.map((r) => r.chapterNumber).toSet();
+  }
+
   Future<bool> hasChapter({
     required String translationId,
     required String bookId,
