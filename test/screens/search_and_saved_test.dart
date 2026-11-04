@@ -9,7 +9,6 @@ import 'package:bible_app/database/app_database.dart';
 import 'package:bible_app/models/bible_book.dart';
 import 'package:bible_app/models/bible_chapter.dart';
 import 'package:bible_app/models/verse.dart';
-import 'package:bible_app/models/verse_annotation.dart';
 import 'package:bible_app/providers/app_providers.dart';
 import 'package:bible_app/repositories/bible_repository.dart';
 import 'package:bible_app/repositories/study_repository.dart';
@@ -242,3 +241,4 @@ void main() {
     });
   });
 }
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -42,6 +43,9 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
 
   /// 1 = slide from right (Next), -1 = slide from left (Previous)
   int _slideDirection = 1;
+
+  /// Controls immersive reading mode (auto-hides bars on scroll down).
+  bool _showControls = true;
 
   @override
   void initState() {
@@ -156,36 +160,57 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
     };
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lectura de Hoy'),
-        centerTitle: true,
-        actions: [
-          Semantics(
-            label: 'Ver conexiones de este capítulo',
-            button: true,
-            excludeSemantics: true,
-            child: IconButton(
-              icon: const Icon(Icons.hub_outlined),
-              tooltip: 'Ver conexiones de este capítulo',
-              onPressed: chapter == null
-                  ? null
-                  : () => _openGraphExplorer(chapter),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: AnimatedSlide(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          offset: _showControls ? Offset.zero : const Offset(0, -1),
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: _showControls ? 1.0 : 0.0,
+            child: AppBar(
+              title: const Text('Lectura de Hoy'),
+              centerTitle: true,
+              actions: [
+                Semantics(
+                  label: 'Ver conexiones de este capítulo',
+                  button: true,
+                  excludeSemantics: true,
+                  child: IconButton(
+                    icon: const Icon(Icons.hub_outlined),
+                    tooltip: 'Ver conexiones de este capítulo',
+                    onPressed: chapter == null
+                        ? null
+                        : () => _openGraphExplorer(chapter),
+                  ),
+                ),
+                Semantics(
+                  label: 'Abrir configuración',
+                  button: true,
+                  excludeSemantics: true,
+                  child: IconButton(
+                    icon: const Icon(Icons.settings),
+                    tooltip: 'Abrir configuración',
+                    onPressed: _openSettings,
+                  ),
+                ),
+              ],
             ),
           ),
-          Semantics(
-            label: 'Abrir configuración',
-            button: true,
-            excludeSemantics: true,
-            child: IconButton(
-              icon: const Icon(Icons.settings),
-              tooltip: 'Abrir configuración',
-              onPressed: _openSettings,
-            ),
-          ),
-        ],
+        ),
       ),
       // The chapter navigation stays visible even while a new chapter loads.
-      bottomNavigationBar: _buildChapterNav(state),
+      bottomNavigationBar: AnimatedSlide(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        offset: _showControls ? Offset.zero : const Offset(0, 1.3),
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: _showControls ? 1.0 : 0.0,
+          child: _buildChapterNav(state),
+        ),
+      ),
       body: _buildBody(stateAsync),
     );
   }
@@ -362,8 +387,23 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
           showTapHint: hasConnections,
         ),
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(24, 6, 24, 40),
+          child: NotificationListener<UserScrollNotification>(
+            onNotification: (notification) {
+              if (notification.direction == ScrollDirection.reverse) {
+                // Scrolling down -> hide bars for immersive reading
+                if (_showControls) {
+                  setState(() => _showControls = false);
+                }
+              } else if (notification.direction == ScrollDirection.forward) {
+                // Scrolling up -> show bars
+                if (!_showControls) {
+                  setState(() => _showControls = true);
+                }
+              }
+              return false;
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(24, 6, 24, 40),
             itemCount: chapter.verses.length + 1,
             itemBuilder: (context, index) {
               if (index == chapter.verses.length) {
@@ -396,8 +436,9 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
             },
           ),
         ),
-      ],
-    );
+      ),
+    ],
+  );
   }
 
   // ---------------------------------------------------------------------
