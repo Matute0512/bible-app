@@ -116,6 +116,7 @@ void main() {
 
       final loaded = state as Loaded;
       expect(loaded.currentIndex, 0);
+      expect(loaded.todayIndex, 0);
       expect(loaded.chapter.reference, 'Génesis 1');
     });
 
@@ -135,6 +136,7 @@ void main() {
       final state = container.read(dailyReadingProvider).requireValue;
       expect(state, isA<Loaded>());
       expect((state as Loaded).currentIndex, 1);
+      expect(state.todayIndex, 0);
     });
 
     test(
@@ -177,8 +179,21 @@ void main() {
 
       final state = container.read(dailyReadingProvider).requireValue;
       expect(state, isA<FreeReadingLoaded>());
-      expect((state as FreeReadingLoaded).chapter.bookId, 'LUK');
-      expect(state.chapter.chapterNumber, 4);
+      final freeState = state as FreeReadingLoaded;
+      expect(freeState.chapter.bookId, 'LUK');
+      expect(freeState.chapter.chapterNumber, 4);
+      expect(freeState.plan, isNotNull);
+      expect(freeState.todayIndex, 0);
+
+      // Verify returnToDailyReading restores the today reading
+      await container
+          .read(dailyReadingProvider.notifier)
+          .returnToDailyReading();
+
+      final restoredState = container.read(dailyReadingProvider).requireValue;
+      expect(restoredState, isA<Loaded>());
+      expect((restoredState as Loaded).currentIndex, 0);
+      expect(restoredState.chapter.reference, 'Génesis 1');
     });
 
     test('goToChapter is a no-op when in FreeReadingLoaded state', () async {
@@ -203,6 +218,27 @@ void main() {
       final state = container.read(dailyReadingProvider).requireValue;
       // Still free reading — goToChapter is a no-op because state is not Loaded
       expect(state, isA<FreeReadingLoaded>());
+    });
+
+    test('empty plan from API results in DailyReadingError', () async {
+      SharedPreferences.setMockInitialValues({
+        'installation_date_utc': DateTime.now().toUtc().toIso8601String(),
+      });
+
+      final container = ProviderContainer(
+        overrides: [
+          apiServiceProvider.overrideWithValue(EmptyMockBibleApiService()),
+          notificationServiceProvider.overrideWithValue(
+            MockNotificationService(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(sharedPreferencesProvider.future);
+      final state = await container.read(dailyReadingProvider.future);
+      expect(state, isA<DailyReadingError>());
+      expect((state as DailyReadingError).message, contains('plan de lectura'));
     });
   });
 }
@@ -233,6 +269,21 @@ class MockBibleApiService implements BibleApiService {
   }
 }
 
+class EmptyMockBibleApiService implements BibleApiService {
+  @override
+  Future<List<BibleBook>> fetchBooks(String translationId) async => [];
+
+  @override
+  Future<BibleChapter> fetchChapter({
+    required String translationId,
+    required String bookId,
+    required String bookName,
+    required int chapterNumber,
+  }) async {
+    throw UnimplementedError();
+  }
+}
+
 class MockNotificationService implements NotificationService {
   @override
   VoidCallback? get onNotificationTap => null;
@@ -242,6 +293,9 @@ class MockNotificationService implements NotificationService {
 
   @override
   Future<bool> requestPermission() async => true;
+
+  @override
+  Future<void> cancelDaily() async {}
 
   @override
   Future<bool> scheduleDailyNotification({

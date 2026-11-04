@@ -22,17 +22,25 @@ class Loaded extends DailyReadingState {
     required this.plan,
     required this.currentIndex,
     required this.chapter,
-  });
+    int? todayIndex,
+  }) : todayIndex = todayIndex ?? currentIndex;
 
   final List<ReadingPlanEntry> plan;
   final int currentIndex;
+  final int todayIndex;
   final BibleChapter chapter;
 }
 
 class FreeReadingLoaded extends DailyReadingState {
-  FreeReadingLoaded({required this.chapter});
+  FreeReadingLoaded({
+    required this.chapter,
+    this.plan,
+    this.todayIndex,
+  });
 
   final BibleChapter chapter;
+  final List<ReadingPlanEntry>? plan;
+  final int? todayIndex;
 }
 
 class Navigating extends DailyReadingState {
@@ -88,6 +96,7 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
       final loadedState = Loaded(
         plan: plan,
         currentIndex: todayIndex,
+        todayIndex: todayIndex,
         chapter: chapter,
       );
 
@@ -123,6 +132,11 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
     }
   }
 
+  Future<void> returnToDailyReading() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => _loadInitialState());
+  }
+
   Future<void> loadFreeChapter(
     String bookId,
     String bookName,
@@ -132,6 +146,12 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
     final previousChapter = (currentState is Loaded)
         ? currentState.chapter
         : (currentState is FreeReadingLoaded ? currentState.chapter : null);
+    final plan = (currentState is Loaded)
+        ? currentState.plan
+        : (currentState is FreeReadingLoaded ? currentState.plan : null);
+    final todayIndex = (currentState is Loaded)
+        ? currentState.todayIndex
+        : (currentState is FreeReadingLoaded ? currentState.todayIndex : null);
 
     if (previousChapter != null) {
       state = AsyncData(Navigating(previousChapter: previousChapter));
@@ -150,7 +170,11 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
         chapterNumber: chapterNumber,
       );
 
-      state = AsyncData(FreeReadingLoaded(chapter: newChapter));
+      state = AsyncData(FreeReadingLoaded(
+        chapter: newChapter,
+        plan: plan,
+        todayIndex: todayIndex,
+      ));
     } catch (e) {
       state = AsyncData(DailyReadingError(message: e.toString()));
     }
@@ -195,6 +219,7 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
         Loaded(
           plan: currentState.plan,
           currentIndex: index,
+          todayIndex: currentState.todayIndex,
           chapter: newChapter,
         ),
       );
@@ -205,7 +230,14 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
 
   Future<bool> rescheduleNotification() async {
     final currentState = state.value;
-    if (currentState is! Loaded) return false;
+    final plan = currentState is Loaded
+        ? currentState.plan
+        : (currentState is FreeReadingLoaded ? currentState.plan : null);
+    final todayIndex = currentState is Loaded
+        ? currentState.todayIndex
+        : (currentState is FreeReadingLoaded ? currentState.todayIndex : null);
+
+    if (plan == null || plan.isEmpty || todayIndex == null) return false;
 
     final userPrefs = await ref.read(userPreferencesProvider.future);
     final notificationService = ref.read(notificationServiceProvider);
@@ -221,10 +253,10 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
       final reminderMinutes = reminder.hour * 60 + reminder.minute;
 
       final index = nowMinutes >= reminderMinutes
-          ? (currentState.currentIndex + 1) % currentState.plan.length
-          : currentState.currentIndex;
+          ? (todayIndex + 1) % plan.length
+          : todayIndex;
 
-      final entry = currentState.plan[index];
+      final entry = plan[index];
 
       return await notificationService.scheduleDailyNotification(
         time: userPrefs.notificationTime,
