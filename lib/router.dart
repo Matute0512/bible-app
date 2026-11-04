@@ -7,6 +7,7 @@ import 'screens/app_shell_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/explore_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/about_licenses_screen.dart';
 import 'screens/plans_screen.dart';
 import 'screens/reading_screen.dart';
 import 'screens/saved_screen.dart';
@@ -93,6 +94,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/plans',
         builder: (context, state) => const PlansScreen(),
+      ),
+      GoRoute(
+        path: '/about',
+        builder: (context, state) => const AboutLicensesScreen(),
       ),
     ],
     redirect: (context, state) {

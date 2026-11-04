@@ -171,3 +171,4 @@ class ThematicPlanProgress {
     return jsonEncode(list);
   }
 }
+

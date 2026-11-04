@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/user_preferences.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/app_providers.dart';
+import '../../services/backup_service.dart';
 import '../../theme/bible_theme.dart';
 
 /// Modal bottom sheet with typography slider, 4-theme selector, translation picker,
@@ -235,11 +237,11 @@ class _SettingsSheetState extends ConsumerState<SettingsSheet> {
                 segments: const [
                   ButtonSegment(
                     value: BibleTranslation.evangelical,
-                    label: Text('Reina Valera'),
+                    label: Text('RVG (66 libros)'),
                   ),
                   ButtonSegment(
                     value: BibleTranslation.catholic,
-                    label: Text('Latinoamericana'),
+                    label: Text('BLM (73 libros)'),
                   ),
                 ],
                 selected: {
@@ -287,6 +289,66 @@ class _SettingsSheetState extends ConsumerState<SettingsSheet> {
                     ),
                   ],
                 ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildCard(
+            context,
+            title: 'Copia de Seguridad Local',
+            icon: Icons.backup_outlined,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Exporta tus notas, versículos favoritos, colores de resaltado y planes a un archivo JSON portable.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () async {
+                          final db = ref.read(databaseProvider);
+                          await const BackupService().shareBackupFile(db);
+                        },
+                        icon: const Icon(Icons.share_outlined, size: 16),
+                        label: const Text('Exportar JSON'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _showRestoreDialog,
+                        icon: const Icon(Icons.restore_page_outlined, size: 16),
+                        label: const Text('Restaurar'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildCard(
+            context,
+            title: 'Información y Licencias',
+            icon: Icons.info_outline,
+            child: Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Acerca de, Licencias y Privacidad'),
+                subtitle: const Text('Atribución bíblica, fuentes SIL OFL y filosofía local-first'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/about');
+                },
               ),
             ),
           ),
@@ -342,5 +404,71 @@ class _SettingsSheetState extends ConsumerState<SettingsSheet> {
         ],
       ),
     );
+  }
+
+  Future<void> _showRestoreDialog() async {
+    final textController = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dCtx) => AlertDialog(
+        title: const Text('Restaurar copia de seguridad'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Pega el contenido JSON de tu copia de seguridad para restaurar notas, favoritos e historial:',
+              style: TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: textController,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                hintText: '{\n  "version": 1,\n  "app": "bible_app", ...\n}',
+                border: OutlineInputBorder(),
+              ),
+              style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dCtx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dCtx).pop(true),
+            child: const Text('Importar'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && textController.text.trim().isNotEmpty && mounted) {
+      try {
+        final db = ref.read(databaseProvider);
+        final importSummary = await const BackupService().importUserDataJson(
+          db,
+          textController.text.trim(),
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '¡Copia restaurada! (${importSummary.totalRecords} registros importados)',
+            ),
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Theme.of(context).colorScheme.error,
+            content: Text('Error al restaurar: $e'),
+          ),
+        );
+      }
+    }
   }
 }

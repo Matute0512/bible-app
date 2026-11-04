@@ -68,16 +68,19 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            thematicPlansDefinitionsProvider
-                .overrideWith((ref) async => mockPlans),
-            thematicPlansProgressProvider.overrideWith((ref) => Stream.value({
-                  'salmos_30_dias': const ThematicPlanProgress(
-                    planId: 'salmos_30_dias',
-                    status: 'active',
-                    startedAtMs: 1000,
-                    completedDays: {1},
-                  ),
-                })),
+            thematicPlansDefinitionsProvider.overrideWith(
+              (ref) async => mockPlans,
+            ),
+            thematicPlansProgressProvider.overrideWith(
+              (ref) => Stream.value({
+                'salmos_30_dias': const ThematicPlanProgress(
+                  planId: 'salmos_30_dias',
+                  status: 'active',
+                  startedAtMs: 1000,
+                  completedDays: {1},
+                ),
+              }),
+            ),
           ],
           child: MaterialApp(
             theme: BibleTheme.build(Brightness.light),
@@ -96,8 +99,7 @@ void main() {
       expect(find.text('Salmos para el Alma'), findsWidgets);
 
       // 3. Scroll to second catalog card
-      final secondCardFinder =
-          find.text('Conocer a Jesús: Evangelio de Juan');
+      final secondCardFinder = find.text('Conocer a Jesús: Evangelio de Juan');
       await tester.scrollUntilVisible(
         secondCardFinder,
         200,
