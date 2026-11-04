@@ -91,6 +91,12 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
   /// Border color of the connection chips.
   final Color chipBorder;
 
+  /// Whether this theme extension represents the Sepia variant.
+  bool get isSepia => readingBackground == ReadingPalette.sepiaSurface;
+
+  /// Whether this theme extension represents the Dark variant.
+  bool get isDark => readingBackground == ReadingPalette.charcoalSurface;
+
   /// Base size of the biblical text before the user's font slider multiplies it.
   static const double baseBodyFontSize = 18;
 
@@ -126,8 +132,8 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
     readingBackground: ReadingPalette.sepiaSurface,
     headingDivider: ReadingPalette.amberDividerSepia,
     navBarBackground: const Color(0xF2F4ECD8),
-    chipSurface: const Color(0x22D4A017),
-    chipBorder: const Color(0x55D4A017),
+    chipSurface: const Color(0x2BD4A017),
+    chipBorder: const Color(0x66D4A017),
     chapterTitle: GoogleFonts.lora(
       fontSize: 27,
       height: 1.25,
@@ -224,6 +230,79 @@ class BibleReadingStyle extends ThemeExtension<BibleReadingStyle> {
       bodyText: TextStyle.lerp(bodyText, other.bodyText, t)!,
       verseNumber: TextStyle.lerp(verseNumber, other.verseNumber, t)!,
       chapterTitle: TextStyle.lerp(chapterTitle, other.chapterTitle, t)!,
+    );
+  }
+}
+
+/// Factory for configuring light, sepia, and dark application themes.
+abstract final class BibleTheme {
+  /// Builds the warm "open book" theme for [brightness].
+  static ThemeData build(Brightness brightness, {bool isSepia = false}) {
+    final isLight = brightness == Brightness.light;
+    final reading = isLight
+        ? (isSepia ? BibleReadingStyle.sepia : BibleReadingStyle.light)
+        : BibleReadingStyle.dark;
+
+    final scheme = ColorScheme.fromSeed(
+      seedColor: ReadingPalette.indigo,
+      brightness: brightness,
+      primary: isLight ? ReadingPalette.indigo : null,
+      onPrimary: isLight ? Colors.white : null,
+      secondary: isLight ? ReadingPalette.amber : ReadingPalette.amberLight,
+      surface: reading.readingBackground,
+      onSurface: isLight
+          ? (isSepia ? ReadingPalette.sepiaText : ReadingPalette.charcoal)
+          : ReadingPalette.charcoalPaper,
+    );
+
+    return ThemeData(
+      colorScheme: scheme,
+      useMaterial3: true,
+      scaffoldBackgroundColor: reading.readingBackground,
+      extensions: [reading],
+      appBarTheme: AppBarTheme(
+        backgroundColor: reading.readingBackground,
+        foregroundColor: scheme.onSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 3,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        showDragHandle: true,
+        modalBackgroundColor: isLight
+            ? (isSepia ? ReadingPalette.sepiaSurface : ReadingPalette.paper)
+            : const Color(0xFF211C16),
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: isSepia
+            ? ReadingPalette.amberDividerSepia
+            : ReadingPalette.amberDivider,
+        thickness: 1,
+      ),
+      sliderTheme: SliderThemeData(
+        activeTrackColor: scheme.primary,
+        inactiveTrackColor: scheme.primary.withValues(alpha: 0.16),
+        thumbColor: scheme.primary,
+        overlayColor: scheme.primary.withValues(alpha: 0.12),
+        valueIndicatorColor: scheme.primary,
+        valueIndicatorTextStyle: TextStyle(
+          color: scheme.onPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: scheme.primary),
+      splashFactory: InkSparkle.splashFactory,
+      highlightColor: Colors.transparent,
     );
   }
 }

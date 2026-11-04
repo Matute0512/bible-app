@@ -253,4 +253,13 @@ class NotificationService {
       return false;
     }
   }
+  /// Cancels the scheduled daily reminder notification.
+  Future<void> cancelDaily() async {
+    try {
+      await _plugin.cancel(id: _dailyNotificationId);
+      debugPrint('[notifications] Daily reminder cancelled');
+    } catch (e) {
+      debugPrint('[notifications] Failed to cancel daily reminder: ');
+    }
+  }
 }

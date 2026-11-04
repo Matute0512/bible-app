@@ -3,14 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../models/bible_chapter.dart';
-
-import '../models/verse.dart';
+import '../providers/app_providers.dart';
 import '../services/reading_plan_service.dart';
 import '../theme/bible_theme.dart';
 import '../widgets/graph_explorer.dart';
+import '../widgets/reader/chapter_header.dart';
+import '../widgets/reader/settings_sheet.dart';
+import '../widgets/reader/verse_list_item.dart';
 import '../widgets/verse_shimmer.dart';
-import '../providers/app_providers.dart';
-import '../models/user_preferences.dart';
+
+export '../widgets/reader/chapter_header.dart';
+export '../widgets/reader/settings_sheet.dart';
+export '../widgets/reader/verse_list_item.dart';
 
 /// Main reading screen: shows the chapter of the day, its curated connection
 /// graph and the settings sheet.
@@ -28,10 +32,7 @@ class ReadingScreen extends ConsumerStatefulWidget {
 class _ReadingScreenState extends ConsumerState<ReadingScreen>
     with SingleTickerProviderStateMixin {
   /// Drives the subtle staggered fade-in of verses after a chapter arrives.
-  late final AnimationController _entrance = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 600),
-  );
+  late final AnimationController _entrance;
 
   /// 1 = slide from right (Next), -1 = slide from left (Previous)
   int _slideDirection = 1;
@@ -39,7 +40,12 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
   @override
   void initState() {
     super.initState();
-    _requestNotificationPermission();
+    _entrance = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+      value: 1.0,
+    );
+    _requestNotificationPermissionIfEnabled();
   }
 
   @override
@@ -48,8 +54,12 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
     super.dispose();
   }
 
-  /// Best-effort runtime permission request; denial never blocks reading.
-  Future<void> _requestNotificationPermission() async {
+  /// Requests notification permission only when the user has notifications enabled.
+  Future<void> _requestNotificationPermissionIfEnabled() async {
+    final prefs = ref.read(userPreferencesProvider).value;
+    if (prefs?.notificationsEnabled != true) {
+      return;
+    }
     try {
       final service = ref.read(notificationServiceProvider);
       await service.requestPermission();
@@ -114,11 +124,12 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
     });
 
     final state = stateAsync.value;
-    final isNavigating = state is Navigating;
-    final isLoaded = state is Loaded;
-    final chapter = isLoaded
-        ? state.chapter
-        : (isNavigating ? state.previousChapter : null);
+    final chapter = switch (state) {
+      Loaded s => s.chapter,
+      FreeReadingLoaded s => s.chapter,
+      Navigating s => s.previousChapter,
+      _ => null,
+    };
 
     return Scaffold(
       appBar: AppBar(
@@ -294,7 +305,8 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
   }
 
   Widget _buildChapter(BibleChapter chapter, DailyReadingState state) {
-    final reading = Theme.of(context).extension<BibleReadingStyle>()!;
+    final reading = Theme.of(context).extension<BibleReadingStyle>() ??
+        BibleReadingStyle.light;
     final colorScheme = Theme.of(context).colorScheme;
     final hasConnections = ref
         .read(verseConnectionsProvider)
@@ -308,7 +320,7 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _ChapterHeader(
+        ChapterHeader(
           chapter: chapter,
           dateLabel: (state is FreeReadingLoaded)
               ? 'Lectura Libre'
@@ -442,83 +454,6 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
   }
 }
 
-/// Pinned passage heading: large centered serif title, date and a soft amber
-/// hairline, plus a subtle hint that verses are explorable when the chapter
-/// has curated connections.
-class _ChapterHeader extends StatelessWidget {
-  const _ChapterHeader({
-    required this.chapter,
-    required this.dateLabel,
-    required this.reading,
-    required this.colorScheme,
-    required this.showTapHint,
-  });
-
-  final BibleChapter chapter;
-  final String dateLabel;
-  final BibleReadingStyle reading;
-  final ColorScheme colorScheme;
-  final bool showTapHint;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
-      child: Semantics(
-        label:
-            'Pasaje bíblico: ${chapter.bookName} capítulo ${chapter.chapterNumber}',
-        excludeSemantics: true,
-        child: Column(
-          children: [
-            Text(
-              chapter.reference,
-              textAlign: TextAlign.center,
-              style: reading.chapterTitle,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              dateLabel,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: 64,
-              height: 2,
-              decoration: BoxDecoration(
-                color: reading.headingDivider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            if (showTapHint) ...[
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.touch_app_outlined,
-                    size: 14,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Tocá un versículo para ver sus conexiones',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// One half of the floating navigation bar (previous/next).
 class _NavAction extends StatelessWidget {
   const _NavAction({
@@ -560,8 +495,9 @@ class _NavAction extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 label,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                style: TextStyle(
                   color: foreground,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -577,394 +513,6 @@ class _NavAction extends StatelessWidget {
       enabled: enabled,
       excludeSemantics: true,
       child: action,
-    );
-  }
-}
-
-/// Modal bottom sheet with the font-size slider and the notification time.
-class SettingsSheet extends ConsumerStatefulWidget {
-  const SettingsSheet({super.key});
-
-  @override
-  ConsumerState<SettingsSheet> createState() => _SettingsSheetState();
-}
-
-class _SettingsSheetState extends ConsumerState<SettingsSheet> {
-  late double _fontSize;
-
-  @override
-  void initState() {
-    super.initState();
-    _fontSize =
-        ref.read(userPreferencesProvider).value?.fontSizeMultiplier ?? 1.0;
-  }
-
-  void _onFontSizeChanged(double value) {
-    setState(() => _fontSize = value);
-    ref.read(userPreferencesProvider.notifier).setFontSizeMultiplier(value);
-  }
-
-  Future<void> _pickTime() async {
-    final initialTime =
-        ref.read(userPreferencesProvider).value?.notificationTime ??
-        const TimeOfDay(hour: 8, minute: 0);
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initialTime,
-      helpText: 'Elegí la hora del recordatorio',
-    );
-    if (picked == null || !mounted) {
-      return;
-    }
-    // Close the sheet first so the confirmation SnackBar is visible.
-    Navigator.of(context).pop();
-    await ref
-        .read(userPreferencesProvider.notifier)
-        .setNotificationTime(picked);
-
-    final scheduled = await ref
-        .read(dailyReadingProvider.notifier)
-        .rescheduleNotification();
-    if (!mounted) return;
-
-    final colorScheme = Theme.of(context).colorScheme;
-    final onLightPill = colorScheme.inverseSurface.computeLuminance() > 0.5;
-    final checkColor = onLightPill
-        ? const Color(0xFF2E7D32)
-        : const Color(0xFF7CD38B);
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                scheduled ? Icons.check_circle : Icons.error_outline,
-                size: 22,
-                color: scheduled ? checkColor : colorScheme.error,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  scheduled
-                      ? 'Notificación diaria programada'
-                      : 'No se pudo programar la notificación. Revisá los permisos',
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final preferences = ref.watch(userPreferencesProvider).value;
-    final reading = theme.extension<BibleReadingStyle>()!;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        24,
-        0,
-        24,
-        MediaQuery.paddingOf(context).bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('Configuración', style: theme.textTheme.titleLarge),
-          const SizedBox(height: 16),
-          _buildCard(
-            context,
-            title: 'Lectura',
-            icon: Icons.text_fields,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Live preview
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: reading.readingBackground,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: reading.headingDivider),
-                  ),
-                  child: RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(text: '1 ', style: reading.verseNumber),
-                        TextSpan(
-                          text:
-                              'En el principio creó Dios los cielos y la tierra.',
-                          style: reading.readingText(_fontSize),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Semantics(
-                      label: 'Fuente más pequeña',
-                      child: ExcludeSemantics(
-                        child: Text(
-                          'A',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Slider(
-                        value: _fontSize,
-                        min: 0.8,
-                        max: 1.5,
-                        divisions: 14,
-                        label: '${(_fontSize * 100).round()}%',
-                        onChanged: _onFontSizeChanged,
-                      ),
-                    ),
-                    Semantics(
-                      label: 'Fuente más grande',
-                      child: ExcludeSemantics(
-                        child: Text(
-                          'A',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: SegmentedButton<AppThemeMode>(
-                    showSelectedIcon: false,
-                    segments: const [
-                      ButtonSegment(
-                        value: AppThemeMode.system,
-                        icon: Icon(Icons.brightness_auto),
-                        label: Text('Auto'),
-                      ),
-                      ButtonSegment(
-                        value: AppThemeMode.light,
-                        icon: Icon(Icons.light_mode),
-                        label: Text('Claro'),
-                      ),
-                      ButtonSegment(
-                        value: AppThemeMode.sepia,
-                        icon: Icon(Icons.menu_book),
-                        label: Text('Sepia'),
-                      ),
-                      ButtonSegment(
-                        value: AppThemeMode.dark,
-                        icon: Icon(Icons.dark_mode),
-                        label: Text('Oscuro'),
-                      ),
-                    ],
-                    selected: {preferences?.themeMode ?? AppThemeMode.system},
-                    onSelectionChanged: (set) {
-                      ref
-                          .read(userPreferencesProvider.notifier)
-                          .setThemeMode(set.first);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildCard(
-            context,
-            title: 'Traducción',
-            icon: Icons.translate,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: SegmentedButton<BibleTranslation>(
-                showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(
-                    value: BibleTranslation.evangelical,
-                    label: Text('Reina Valera'),
-                  ),
-                  ButtonSegment(
-                    value: BibleTranslation.catholic,
-                    label: Text('Latinoamericana'),
-                  ),
-                ],
-                selected: {
-                  preferences?.translation ?? BibleTranslation.evangelical,
-                },
-                onSelectionChanged: (set) {
-                  ref
-                      .read(userPreferencesProvider.notifier)
-                      .setTranslation(set.first);
-                },
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildCard(
-            context,
-            title: 'Recordatorio',
-            icon: Icons.notifications_active,
-            iconColor: ReadingPalette.amber,
-            iconBg: ReadingPalette.amber.withValues(alpha: 0.16),
-            child: ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Hora del recordatorio'),
-              subtitle: Text(
-                preferences?.notificationTime.format(context) ?? '',
-              ),
-              trailing: FilledButton.tonal(
-                onPressed: _pickTime,
-                child: const Text('Cambiar'),
-              ),
-              onTap: _pickTime,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCard(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    Color? iconColor,
-    Color? iconBg,
-    required Widget child,
-  }) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: iconBg ?? colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  size: 18,
-                  color: iconColor ?? colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class VerseListItem extends StatelessWidget {
-  const VerseListItem({
-    super.key,
-    required this.verse,
-    required this.index,
-    required this.verseCount,
-    required this.entranceAnimation,
-    required this.fontSizeMultiplier,
-    required this.onTap,
-  });
-
-  final Verse verse;
-  final int index;
-  final int verseCount;
-  final Animation<double> entranceAnimation;
-  final double fontSizeMultiplier;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final reading = Theme.of(context).extension<BibleReadingStyle>()!;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return AnimatedBuilder(
-      animation: entranceAnimation,
-      builder: (context, _) {
-        // Each verse occupies a slice of the animation timeline, so the ones
-        // near the top fade in just before those further down the scroll.
-        final span = 0.9;
-        final slice = verseCount > 0 ? span / verseCount : 1.0;
-        final start = index * slice;
-        final local = ((entranceAnimation.value - start) / slice)
-            .clamp(0.0, 1.0)
-            .toDouble();
-        final dy = (1 - local) * 10.0;
-
-        return Opacity(
-          opacity: local,
-          child: Transform.translate(
-            offset: Offset(0, dy),
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 18),
-              child: Semantics(
-                button: true,
-                label: 'Versículo ${verse.number}. Ver conexiones',
-                hint: 'Abre las referencias relacionadas de este pasaje',
-                excludeSemantics: true,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: onTap,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Slight upward offset gives the numeral a printed
-                      // "superscript anchor" feel next to the verse text.
-                      Transform.translate(
-                        offset: const Offset(0, -3),
-                        child: Text(
-                          '${verse.number}',
-                          style: reading.verseNumber,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          verse.text,
-                          style: reading
-                              .readingText(fontSizeMultiplier)
-                              .copyWith(color: colorScheme.onSurface),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
