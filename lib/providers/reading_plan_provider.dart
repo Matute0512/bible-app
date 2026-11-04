@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/bible_chapter.dart';
 import '../services/reading_plan_service.dart';
 import 'bible_api_provider.dart';
+import 'bible_repository_provider.dart';
 import 'notification_provider.dart';
 import 'shared_preferences_provider.dart';
 import 'user_preferences_provider.dart';
@@ -65,17 +66,13 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
 
   Future<DailyReadingState> _loadInitialState() async {
     try {
-      // [FIX] Use ref.read (not ref.watch) inside non-build async method.
-      // ref.watch here would register a persistent listener, causing double
-      // rebuilds if userPreferencesProvider emits after the initial load.
+      // Use ref.read (not ref.watch) inside non-build async method.
       final userPrefs = await ref.read(userPreferencesProvider.future);
       final readingPlanService = ref.read(readingPlanProvider);
-      final apiService = ref.read(apiServiceProvider);
+      final bibleRepo = ref.read(bibleRepositoryProvider);
 
       final plan = await readingPlanService.buildPlan(userPrefs.translation);
 
-      // [FIX] Guard against an empty plan (e.g. API returns 0 books) to
-      // prevent an IntegerDivisionByZeroException on `elapsed % plan.length`.
       if (plan.isEmpty) {
         return DailyReadingError(
           message: 'No se pudo construir el plan de lectura.',
@@ -86,7 +83,7 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
       final todayIndex = elapsed % plan.length;
 
       final entry = plan[todayIndex];
-      final chapter = await apiService.fetchChapter(
+      final chapter = await bibleRepo.getChapter(
         translationId: userPrefs.translationId,
         bookId: entry.bookId,
         bookName: entry.bookName,
@@ -112,7 +109,6 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
             ? (todayIndex + 1) % plan.length
             : todayIndex;
 
-        // [FIX] Renamed inner variable to avoid shadowing the outer `entry`.
         final notificationEntry = plan[notificationIndex];
         notificationService
             .scheduleDailyNotification(
@@ -120,7 +116,6 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
               passageReference: notificationEntry.reference,
             )
             .catchError((Object e) {
-              // Log scheduling errors instead of silently discarding them.
               debugPrint('[reading_plan] Notification scheduling failed: $e');
               return false;
             });
@@ -161,9 +156,9 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
 
     try {
       final userPrefs = await ref.read(userPreferencesProvider.future);
-      final apiService = ref.read(apiServiceProvider);
+      final bibleRepo = ref.read(bibleRepositoryProvider);
 
-      final newChapter = await apiService.fetchChapter(
+      final newChapter = await bibleRepo.getChapter(
         translationId: userPrefs.translationId,
         bookId: bookId,
         bookName: bookName,
@@ -182,12 +177,43 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
 
   Future<void> goToChapter(int delta) async {
     final currentState = state.value;
-    if (currentState is! Loaded) return;
+    if (currentState is Loaded) {
+      final nextIndex =
+          (currentState.currentIndex + delta + currentState.plan.length) %
+          currentState.plan.length;
+      await goToPlanIndex(nextIndex);
+      return;
+    }
 
-    final nextIndex =
-        (currentState.currentIndex + delta + currentState.plan.length) %
-        currentState.plan.length;
-    await goToPlanIndex(nextIndex);
+    if (currentState is FreeReadingLoaded) {
+      final currentChapter = currentState.chapter;
+      final bibleRepo = ref.read(bibleRepositoryProvider);
+      final userPrefs = await ref.read(userPreferencesProvider.future);
+
+      state = AsyncData(Navigating(previousChapter: currentChapter));
+
+      try {
+        final target = delta > 0
+            ? await bibleRepo.resolveNextChapter(
+                translationId: userPrefs.translationId,
+                currentBookId: currentChapter.bookId,
+                currentChapter: currentChapter.chapterNumber,
+              )
+            : await bibleRepo.resolvePreviousChapter(
+                translationId: userPrefs.translationId,
+                currentBookId: currentChapter.bookId,
+                currentChapter: currentChapter.chapterNumber,
+              );
+
+        await loadFreeChapter(
+          target.bookId,
+          target.bookName,
+          target.chapterNumber,
+        );
+      } catch (e) {
+        state = AsyncData(DailyReadingError(message: e.toString()));
+      }
+    }
   }
 
   Future<void> goToPlanIndex(int index) async {
@@ -206,9 +232,9 @@ class DailyReadingNotifier extends AsyncNotifier<DailyReadingState> {
     try {
       final entry = currentState.plan[index];
       final userPrefs = await ref.read(userPreferencesProvider.future);
-      final apiService = ref.read(apiServiceProvider);
+      final bibleRepo = ref.read(bibleRepositoryProvider);
 
-      final newChapter = await apiService.fetchChapter(
+      final newChapter = await bibleRepo.getChapter(
         translationId: userPrefs.translationId,
         bookId: entry.bookId,
         bookName: entry.bookName,

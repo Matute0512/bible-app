@@ -355,22 +355,21 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
   // ---------------------------------------------------------------------
 
   Widget _buildChapterNav(DailyReadingState? state) {
-    if (state is FreeReadingLoaded) return const SizedBox.shrink();
-
     final isLoaded = state is Loaded;
+    final isFreeLoaded = state is FreeReadingLoaded;
     final isNavigating = state is Navigating;
 
     final List<ReadingPlanEntry>? plan = isLoaded
         ? state.plan
         : (isNavigating ? state.plan : null);
-    final enabled = plan != null && isLoaded;
+    final enabled = (isLoaded && plan != null) || isFreeLoaded;
     final currentIndex = isLoaded
         ? state.currentIndex
         : (isNavigating ? state.targetIndex : null);
 
-    final position = plan == null || currentIndex == null
-        ? null
-        : '${currentIndex + 1} de ${plan.length}';
+    final position = isLoaded && plan != null && currentIndex != null
+        ? '${currentIndex + 1} de ${plan.length}'
+        : (isFreeLoaded ? state.chapter.reference : null);
 
     final container = Container(
       decoration: BoxDecoration(

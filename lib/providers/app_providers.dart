@@ -5,3 +5,4 @@ export 'reading_plan_provider.dart';
 export 'notification_provider.dart';
 export 'verse_connections_provider.dart';
 export 'database_provider.dart';
+export 'bible_repository_provider.dart';
