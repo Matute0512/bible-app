@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../models/verse.dart';
+import '../../models/verse_annotation.dart';
 import '../../theme/bible_theme.dart';
 
 /// Renders a single verse in the reading list with editorial typography,
-/// an amber verse numeral, and staggered entrance animation.
+/// an amber verse numeral, optional highlight background, favorite/note badges,
+/// and staggered entrance animation.
 class VerseListItem extends StatelessWidget {
   const VerseListItem({
     super.key,
@@ -13,6 +15,7 @@ class VerseListItem extends StatelessWidget {
     required this.verseCount,
     required this.entranceAnimation,
     required this.fontSizeMultiplier,
+    this.annotation,
     required this.onTap,
   });
 
@@ -21,6 +24,7 @@ class VerseListItem extends StatelessWidget {
   final int verseCount;
   final Animation<double> entranceAnimation;
   final double fontSizeMultiplier;
+  final VerseAnnotation? annotation;
   final VoidCallback onTap;
 
   @override
@@ -29,11 +33,13 @@ class VerseListItem extends StatelessWidget {
         BibleReadingStyle.light;
     final colorScheme = Theme.of(context).colorScheme;
 
+    final highlightBg = reading.highlightColorFor(annotation?.highlightColor);
+    final isFavorite = annotation?.isFavorite ?? false;
+    final hasNote = annotation?.hasNote ?? false;
+
     return AnimatedBuilder(
       animation: entranceAnimation,
       builder: (context, _) {
-        // Each verse occupies a slice of the animation timeline, so the ones
-        // near the top fade in just before those further down the scroll.
         const span = 0.9;
         final slice = verseCount > 0 ? span / verseCount : 1.0;
         final start = index * slice;
@@ -47,37 +53,66 @@ class VerseListItem extends StatelessWidget {
           child: Transform.translate(
             offset: Offset(0, dy),
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 18),
+              padding: const EdgeInsets.only(bottom: 12),
               child: Semantics(
                 button: true,
-                label: 'Versículo ${verse.number}. Ver conexiones',
-                hint: 'Abre las referencias relacionadas de este pasaje',
+                label:
+                    'Versículo ${verse.number}. ${isFavorite ? "En favoritos. " : ""}${highlightBg != null ? "Resaltado. " : ""}${hasNote ? "Con nota. " : ""}Tocar para opciones',
                 excludeSemantics: true,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: onTap,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Slight upward offset gives the numeral a printed
-                      // "superscript anchor" feel next to the verse text.
-                      Transform.translate(
-                        offset: const Offset(0, -3),
-                        child: Text(
-                          '${verse.number}',
-                          style: reading.verseNumber,
+                  child: Container(
+                    padding: highlightBg != null
+                        ? const EdgeInsets.symmetric(horizontal: 8, vertical: 6)
+                        : const EdgeInsets.symmetric(vertical: 4),
+                    decoration: BoxDecoration(
+                      color: highlightBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Numeral with optional indicators for favorite and note
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Transform.translate(
+                              offset: const Offset(0, -2),
+                              child: Text(
+                                '${verse.number}',
+                                style: reading.verseNumber,
+                              ),
+                            ),
+                            if (isFavorite) ...[
+                              const SizedBox(height: 2),
+                              Icon(
+                                Icons.star_rounded,
+                                size: 12,
+                                color: ReadingPalette.amber,
+                              ),
+                            ],
+                            if (hasNote) ...[
+                              const SizedBox(height: 2),
+                              Icon(
+                                Icons.note_alt_rounded,
+                                size: 12,
+                                color: colorScheme.secondary,
+                              ),
+                            ],
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          verse.text,
-                          style: reading
-                              .readingText(fontSizeMultiplier)
-                              .copyWith(color: colorScheme.onSurface),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            verse.text,
+                            style: reading
+                                .readingText(fontSizeMultiplier)
+                                .copyWith(color: colorScheme.onSurface),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

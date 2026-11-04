@@ -3,17 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../models/bible_chapter.dart';
+import '../models/verse.dart';
 import '../providers/app_providers.dart';
 import '../services/reading_plan_service.dart';
 import '../theme/bible_theme.dart';
 import '../widgets/graph_explorer.dart';
+import '../models/verse_annotation.dart';
 import '../widgets/reader/chapter_completion_card.dart';
+import '../widgets/reader/verse_action_sheet.dart';
 import '../widgets/reader/chapter_header.dart';
 import '../widgets/reader/settings_sheet.dart';
 import '../widgets/reader/verse_list_item.dart';
 import '../widgets/verse_shimmer.dart';
 
 export '../widgets/reader/chapter_completion_card.dart';
+export '../widgets/reader/verse_action_sheet.dart';
 export '../widgets/reader/chapter_header.dart';
 export '../widgets/reader/settings_sheet.dart';
 export '../widgets/reader/verse_list_item.dart';
@@ -89,6 +93,24 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) => const SettingsSheet(),
+    );
+  }
+
+  /// Opens the contextual action sheet for highlighting, favorites, and notes.
+  Future<void> _openVerseActions(
+    BibleChapter chapter,
+    Verse verse,
+    VerseAnnotation? annotation,
+  ) {
+    final translationId =
+        ref.read(userPreferencesProvider).value?.translationId ?? 'spa_rvg';
+    return VerseActionSheet.show(
+      context: context,
+      chapter: chapter,
+      verse: verse,
+      translationId: translationId,
+      annotation: annotation,
+      onOpenGraph: () => _openGraphExplorer(chapter, fromVerse: verse.number),
     );
   }
 
@@ -319,6 +341,14 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
     final fontSizeMultiplier =
         ref.watch(userPreferencesProvider).value?.fontSizeMultiplier ?? 1.0;
 
+    final annotationsAsync = ref.watch(
+      chapterAnnotationsProvider((
+        bookId: chapter.bookId,
+        chapterNumber: chapter.chapterNumber,
+      )),
+    );
+    final annotations = annotationsAsync.asData?.value ?? const <int, VerseAnnotation>{};
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -348,15 +378,19 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
                       : 'daily_plan',
                 );
               }
+              final verse = chapter.verses[index];
+              final annotation = annotations[verse.number];
               return VerseListItem(
-                verse: chapter.verses[index],
+                verse: verse,
                 index: index,
                 verseCount: chapter.verses.length,
                 entranceAnimation: _entrance,
                 fontSizeMultiplier: fontSizeMultiplier,
-                onTap: () => _openGraphExplorer(
+                annotation: annotation,
+                onTap: () => _openVerseActions(
                   chapter,
-                  fromVerse: chapter.verses[index].number,
+                  verse,
+                  annotation,
                 ),
               );
             },
