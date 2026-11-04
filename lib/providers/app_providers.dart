@@ -4,3 +4,4 @@ export 'bible_api_provider.dart';
 export 'reading_plan_provider.dart';
 export 'notification_provider.dart';
 export 'verse_connections_provider.dart';
+export 'database_provider.dart';
