@@ -147,3 +147,4 @@ class StudyRepository {
   Stream<List<VerseAnnotation>> watchHighlights({String? color}) =>
       studyDao.watchHighlights(color: color);
 }
+

@@ -70,8 +70,11 @@ class VerseAnnotation {
   final DateTime updatedAt;
 
   /// Helper key for coordinate map indexing.
-  static String coordinateId(String bookId, int chapterNumber, int verseNumber) =>
-      '$bookId:$chapterNumber:$verseNumber';
+  static String coordinateId(
+    String bookId,
+    int chapterNumber,
+    int verseNumber,
+  ) => '$bookId:$chapterNumber:$verseNumber';
 
   bool get hasHighlight => highlightColor != null && highlightColor!.isNotEmpty;
 
@@ -81,7 +84,11 @@ class VerseAnnotation {
 
   List<String> get tags {
     if (tagsCsv == null || tagsCsv!.trim().isEmpty) return const [];
-    return tagsCsv!.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+    return tagsCsv!
+        .split(',')
+        .map((t) => t.trim())
+        .where((t) => t.isNotEmpty)
+        .toList();
   }
 
   VerseAnnotation copyWith({
@@ -105,8 +112,9 @@ class VerseAnnotation {
       chapterNumber: chapterNumber ?? this.chapterNumber,
       verseNumber: verseNumber ?? this.verseNumber,
       isFavorite: isFavorite ?? this.isFavorite,
-      highlightColor:
-          highlightColor != null ? highlightColor() : this.highlightColor,
+      highlightColor: highlightColor != null
+          ? highlightColor()
+          : this.highlightColor,
       noteText: noteText != null ? noteText() : this.noteText,
       tagsCsv: tagsCsv != null ? tagsCsv() : this.tagsCsv,
       originTranslationId: originTranslationId ?? this.originTranslationId,

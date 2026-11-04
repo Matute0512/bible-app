@@ -47,3 +47,4 @@ final highlightsProvider =
   final repo = ref.watch(studyRepositoryProvider);
   return repo.watchHighlights(color: color);
 });
+
