@@ -294,3 +294,4 @@ class AboutLicensesScreen extends StatelessWidget {
     );
   }
 }
+

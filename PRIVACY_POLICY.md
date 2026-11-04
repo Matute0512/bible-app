@@ -56,3 +56,4 @@ La aplicación solicita únicamente los permisos estrictamente indispensables pa
 ## 6. Contacto y Consultas
 
 Para cualquier duda, sugerencia o consulta sobre esta política de privacidad o sobre el funcionamiento de la aplicación, puedes abrir un issue o comunicarte a través del repositorio oficial de código abierto del proyecto.
+
