@@ -91,15 +91,34 @@ class BibleApiService {
     }
   }
 
+  /// Fetches the complete translation payload in simplified format.
+  ///
+  /// The returned map contains 	ranslation metadata and ooks with their
+  /// nested chapters and erses.
+  Future<Map<String, dynamic>> fetchCompleteTranslationSimple(
+    String translationId,
+  ) async {
+    final uri = Uri.parse(
+      '$baseUrl/$translationId/complete.simple.json',
+    );
+    final json = await _getJson(uri, customTimeout: const Duration(seconds: 60));
+    if (json is! Map<String, dynamic>) {
+      throw const BibleApiException(
+        'Recibimos una respuesta inválida del servidor.',
+      );
+    }
+    return json;
+  }
+
   /// Performs a GET on [uri] and decodes the body, mapping every failure to a
   /// [BibleApiException].
   ///
   /// The body is decoded as UTF-8 from the raw bytes so Spanish characters
   /// survive regardless of the charset declared in the response headers.
-  Future<dynamic> _getJson(Uri uri) async {
+  Future<dynamic> _getJson(Uri uri, {Duration? customTimeout}) async {
     http.Response response;
     try {
-      response = await _client.get(uri).timeout(_timeout);
+      response = await _client.get(uri).timeout(customTimeout ?? _timeout);
     } on TimeoutException {
       throw const BibleApiException(
         'La conexión tardó demasiado. Revisá tu conexión a internet.',

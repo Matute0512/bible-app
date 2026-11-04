@@ -193,21 +193,107 @@ class BibleCacheDao extends DatabaseAccessor<AppDatabase> with _$BibleCacheDaoMi
     });
   }
 
-  /// Searches the FTS5 virtual table for matching verses.
+  /// Counts how many distinct chapters are currently cached for [translationId].
+  Future<int> getCachedChaptersCount(String translationId) async {
+    final countExp = countAll();
+    final query = selectOnly(cachedChapters)
+      ..addColumns([countExp])
+      ..where(cachedChapters.translationId.equals(translationId));
+    final row = await query.getSingle();
+    return row.read(countExp) ?? 0;
+  }
+
+  /// Saves a batch of chapters and their verses into SQLite and FTS5.
+  Future<void> saveBatchChapters(
+    String translationId,
+    List<BibleChapter> chapters,
+  ) async {
+    if (chapters.isEmpty) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await transaction(() async {
+      await batch((b) {
+        b.insertAllOnConflictUpdate(
+          cachedChapters,
+          chapters.map(
+            (c) => CachedChaptersCompanion.insert(
+              translationId: translationId,
+              bookId: c.bookId,
+              chapterNumber: c.chapterNumber,
+              bookName: c.bookName,
+              fetchedAtMs: now,
+            ),
+          ),
+        );
+      });
+
+      await batch((b) {
+        for (final chapter in chapters) {
+          b.insertAllOnConflictUpdate(
+            cachedVerses,
+            chapter.verses.map(
+              (v) => CachedVersesCompanion.insert(
+                translationId: translationId,
+                bookId: chapter.bookId,
+                chapterNumber: chapter.chapterNumber,
+                verseNumber: v.number,
+                textContent: v.text,
+                normalizedText: TextNormalizer.normalizeForSearch(v.text),
+              ),
+            ),
+          );
+        }
+      });
+
+      for (final chapter in chapters) {
+        await customStatement(
+          'DELETE FROM fts_verses WHERE translation_id = ? AND book_id = ? AND chapter_number = ?',
+          [translationId, chapter.bookId, chapter.chapterNumber],
+        );
+        for (final v in chapter.verses) {
+          await customStatement(
+            '''
+            INSERT INTO fts_verses (
+              translation_id, book_id, chapter_number, verse_number,
+              book_name, text_content, normalized_text
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''',
+            [
+              translationId,
+              chapter.bookId,
+              chapter.chapterNumber,
+              v.number,
+              chapter.bookName,
+              v.text,
+              TextNormalizer.normalizeForSearch(v.text),
+            ],
+          );
+        }
+      }
+    });
+  }
+
+  /// Searches the FTS5 virtual table for matching verses, optionally filtered
+  /// by a set of allowed [bookIds].
   Future<List<FtsSearchResult>> searchVerses({
     required String translationId,
     required String query,
+    Set<String>? bookIds,
     int limit = 50,
   }) async {
     final cleanQuery = query.replaceAll('"', '""').trim();
     if (cleanQuery.isEmpty) return [];
 
-    // Search using FTS5 MATCH with prefix matching on tokens
     final ftsQuery = cleanQuery
         .split(' ')
         .where((t) => t.isNotEmpty)
         .map((t) => '"$t"*')
         .join(' ');
+
+    final hasBookFilter = bookIds != null && bookIds.isNotEmpty;
+    final bookFilterClause = hasBookFilter
+        ? 'AND book_id IN (${bookIds.map((id) => "'$id'").join(',')})'
+        : '';
 
     try {
       final rows = await customSelect(
@@ -216,7 +302,7 @@ class BibleCacheDao extends DatabaseAccessor<AppDatabase> with _$BibleCacheDaoMi
                book_name, text_content,
                snippet(fts_verses, 5, '<b>', '</b>', '...', 15) as snippet
         FROM fts_verses
-        WHERE translation_id = ? AND fts_verses MATCH ?
+        WHERE translation_id = ? AND fts_verses MATCH ? $bookFilterClause
         ORDER BY rank
         LIMIT ?
         ''',
@@ -242,13 +328,17 @@ class BibleCacheDao extends DatabaseAccessor<AppDatabase> with _$BibleCacheDaoMi
           )
           .toList();
     } catch (_) {
-      // Fallback to normalized LIKE query if FTS syntax fails
       final normalizedQuery = '%${TextNormalizer.normalizeForSearch(cleanQuery)}%';
       final rows = await (select(cachedVerses)
             ..where(
-              (tbl) =>
-                  tbl.translationId.equals(translationId) &
-                  tbl.normalizedText.like(normalizedQuery),
+              (tbl) {
+                var condition = tbl.translationId.equals(translationId) &
+                    tbl.normalizedText.like(normalizedQuery);
+                if (hasBookFilter) {
+                  condition = condition & tbl.bookId.isIn(bookIds);
+                }
+                return condition;
+              },
             )
             ..limit(limit))
           .get();

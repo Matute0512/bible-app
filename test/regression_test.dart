@@ -52,6 +52,10 @@ class CountingBibleApiService implements BibleApiService {
       ],
     );
   }
+@override
+  Future<Map<String, dynamic>> fetchCompleteTranslationSimple(
+    String translationId,
+  ) async => {};
 }
 
 class TestNotificationService implements NotificationService {

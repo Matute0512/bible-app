@@ -249,4 +249,71 @@ class BibleRepository {
       chapterNumber: prevBook.chapterCount,
     );
   }
+
+
+  /// Searches cached verses using FTS5 with optional book filtering.
+  Future<List<FtsSearchResult>> searchVerses({
+    required String translationId,
+    required String query,
+    Set<String>? bookIds,
+    int limit = 50,
+  }) {
+    return cache.searchVerses(
+      translationId: translationId,
+      query: query,
+      bookIds: bookIds,
+      limit: limit,
+    );
+  }
+
+  /// Counts the total number of cached chapters for [translationId].
+  Future<int> getCachedChaptersCount(String translationId) {
+    return cache.getCachedChaptersCount(translationId);
+  }
+
+  /// Downloads the complete translation (e.g. 1189 chapters) and batch-indexes
+  /// all verses in SQLite + FTS5.
+  Future<int> downloadAndIndexCompleteTranslation(
+    String translationId, {
+    void Function(double progress, String status)? onProgress,
+  }) async {
+    onProgress?.call(0.1, 'Descargando texto bíblico completo...');
+    final data = await api.fetchCompleteTranslationSimple(translationId);
+
+    onProgress?.call(0.5, 'Procesando libros y capítulos...');
+    final booksData = data['books'] as List? ?? [];
+    final allChapters = <BibleChapter>[];
+
+    for (final b in booksData) {
+      if (b is! Map<String, dynamic>) continue;
+      final bookId = b['id'] as String? ?? '';
+      final bookName = b['name'] as String? ?? '';
+      final chaptersList = b['chapters'] as List? ?? [];
+
+      for (final ch in chaptersList) {
+        if (ch is! Map<String, dynamic>) continue;
+        final chObj = ch['chapter'];
+        int chNum = 0;
+        if (chObj is Map<String, dynamic>) {
+          chNum = (chObj['number'] as num?)?.toInt() ?? 0;
+        }
+        if (chNum > 0) {
+          try {
+            final chapter = BibleChapter.fromSimpleJson(
+              ch,
+              bookId: bookId,
+              bookName: bookName,
+              chapterNumber: chNum,
+            );
+            allChapters.add(chapter);
+          } catch (_) {}
+        }
+      }
+    }
+
+    onProgress?.call(0.8, 'Indexando capítulos para búsqueda offline...');
+    await cache.saveBatchChapters(translationId, allChapters);
+    onProgress?.call(1.0, 'Completado');
+    return allChapters.length;
+  }
 }

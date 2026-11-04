@@ -267,11 +267,21 @@ class MockBibleApiService implements BibleApiService {
       verses: [],
     );
   }
+
+  @override
+  Future<Map<String, dynamic>> fetchCompleteTranslationSimple(
+    String translationId,
+  ) async => {};
 }
 
 class EmptyMockBibleApiService implements BibleApiService {
   @override
   Future<List<BibleBook>> fetchBooks(String translationId) async => [];
+
+  @override
+  Future<Map<String, dynamic>> fetchCompleteTranslationSimple(
+    String translationId,
+  ) async => {};
 
   @override
   Future<BibleChapter> fetchChapter({

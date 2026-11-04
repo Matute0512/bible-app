@@ -49,6 +49,11 @@ class MockCountingApi implements BibleApiService {
       ],
     );
   }
+
+  @override
+  Future<Map<String, dynamic>> fetchCompleteTranslationSimple(
+    String translationId,
+  ) async => {};
 }
 
 void main() {
