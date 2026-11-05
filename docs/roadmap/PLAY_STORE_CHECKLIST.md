@@ -31,36 +31,33 @@ Guía técnica y regulatoria exhaustiva para la publicación exitosa de `bible_a
   - **No declarar `SCHEDULE_EXACT_ALARM`**: La aplicación emplea alarmas no exactas tolerantes al modo reposo (*inexact inexactAllowWhileIdle*), evitando la necesidad de justificar un permiso de alta sensibilidad ante Google Play.
 
 ### 1.4 Atribución Legal y Licencias de Textos Bíblicos (Crítico)
-- [ ] **Santa Biblia Reina Valera Gómez (`spa_rvg`)**:
+- [x] **Santa Biblia Reina Valera Gómez (`spa_rvg`)**:
   - Texto protegido por derechos de autor (© 2004–2023 Dr. Humberto Gómez Caballero / eBible.org).
-  - La licencia prohíbe modificaciones del texto y exige inclusión de la nota de copyright explícita en la pantalla de información de la aplicación.
+  - La licencia prohíbe modificaciones del texto y exige inclusión de la nota de copyright explícita en la pantalla de información de la aplicación (incorporada en `AboutLicensesScreen`).
   - *Alternativa*: Si se requiere texto de dominio público absoluto, migrar al identificador `spa_r09` (*Reina Valera 1909*).
-- [ ] **Santa Biblia libre para el mundo (`spa_blm`)**:
+- [x] **Santa Biblia libre para el mundo (`spa_blm`)**:
   - Licencia **Creative Commons Atribución-CompartirIgual 4.0 Internacional (CC BY-SA 4.0)**.
-  - Exige atribuir a eBible.org y proveer enlace a la licencia dentro de la app.
-- [ ] **Licencias de Fuentes Tipográficas**:
-  - `Lora` e `Inter` se distribuyen bajo la licencia **SIL Open Font License 1.1 (OFL)**. Debe incluirse el texto de la licencia en la sección de créditos o assets de la app.
+  - Atribución a eBible.org y enlace a la licencia incluidos dentro de la app (`AboutLicensesScreen`).
+- [x] **Licencias de Fuentes Tipográficas**:
+  - `Lora` e `Inter` bajo licencia **SIL Open Font License 1.1 (OFL)** incluidas en la sección de créditos y licencias.
 
 ### 1.5 Privacidad y Declaración de Seguridad de los Datos (Data Safety)
-- [ ] **URL pública de Política de Privacidad (HTTPS)**:
-  - Google Play exige un enlace público accesible a la Política de Privacidad, tanto en la ficha de la tienda como dentro de la aplicación.
-- [ ] **Formulario de Seguridad de los Datos en Play Console**:
-  - Declarar que **la aplicación no recopila ni comparte datos personales con terceros**.
-  - No hay inicio de sesión, ni almacenamiento en servidores remotos, ni seguimiento analítico publicitario. Toda la información personal (anotaciones, historial de lectura, planes) reside de forma local en el dispositivo del usuario.
+- [x] **URL pública de Política de Privacidad (HTTPS)**:
+  - Documento redactado y formateado en `PRIVACY_POLICY.md` (listo para vincular vía GitHub Pages o repo público).
+- [x] **Formulario de Seguridad de los Datos en Play Console**:
+  - Declaración preparada: la aplicación **no recopila ni comparte datos con terceros**; 100% offline y local.
 
 ### 1.6 Activos Gráficos Obligatorios para la Ficha de la Tienda
-- [ ] **Icono de la aplicación en alta resolución**:
-  - $512 \times 512\text{ px}$, formato PNG de 32 bits, peso máximo de 1024 KB.
-- [ ] **Icono adaptativo de Android**:
-  - Implementación en `res/mipmap-anydpi-v26/` con capas separadas de `foreground` y `background` respetando la estética *Contemporary Editorial Codex*.
-- [ ] **Gráfico de funciones (*Feature Graphic*)**:
-  - $1024 \times 500\text{ px}$, formato JPG o PNG de 24 bits sin transparencia.
-- [ ] **Capturas de pantalla para teléfonos**:
-  - Mínimo 4 capturas de pantalla con resolución mínima de $1080 \times 1920\text{ px}$ (ratio 16:9 o 9:16) mostrando las pantallas principales:
-    1. Dashboard devocional con lectura del día y progreso real.
-    2. Lector bíblico con versículo resaltado en tema Marfil / Sepia.
-    3. Hoja modal de estudio y notas personales.
-    4. Grafo de conexiones teológicas o explorador de libros.
+- [x] **Icono de la aplicación en alta resolución**:
+  - $512 \times 512\text{ px}$, PNG 32-bit generado en `assets/store_assets/icon_512.png` y vectorial en `icon_512.svg`.
+- [x] **Icono adaptativo de Android**:
+  - Configurado en `res/mipmap-anydpi-v26/` con capas separadas de `foreground` y `background`.
+- [x] **Gráfico de funciones (*Feature Graphic*)**:
+  - $1024 \times 500\text{ px}$, formato PNG 24-bit generado en `assets/store_assets/feature_graphic_1024x500.png` y vectorial en `feature_graphic_1024x500.svg`.
+- [x] **Capturas de pantalla para teléfonos**:
+  - 5 capturas en alta resolución $1080 \times 2400\text{ px}$ en español con SystemUI Demo Mode:
+    - En crudo: `assets/store_screenshots/01_dashboard.png` a `05_study_graph.png`.
+    - Promocionales enmarcadas con copy editorial: `assets/store_assets/framed_screenshots/promo_*.png`.
 
 ---
 
@@ -75,8 +72,8 @@ Guía técnica y regulatoria exhaustiva para la publicación exitosa de `bible_a
   - Configurar reglas de ofuscación y reducción de código en `android/app/proguard-rules.pro` para mantener el bundle final por debajo de $18\text{ MB}$.
 
 ### 2.2 Preservación de Datos del Usuario
-- [ ] **Copia de seguridad local (JSON Backup)**:
-  - Al no utilizar cuentas en la nube, incluir en Ajustes un botón para exportar e importar las notas, favoritos e historial en un archivo JSON legible para transferirlo fácilmente a otro teléfono.
+- [x] **Copia de seguridad local (JSON Backup)**:
+  - Implementado `BackupService` en Ajustes para exportar e importar notas, favoritos, colores de resaltado y progreso de planes temáticos en JSON portable sin dependencia de nube.
 - [ ] **Prueba de ciclo de vida de la aplicación**:
   - Verificar que al cerrar la app desde la multitarea o tras un reinicio del sistema, el último versículo visualizado y el estado de la racha permanezcan intactos.
 
