@@ -109,20 +109,41 @@ class _SettingsSheetState extends ConsumerState<SettingsSheet> {
         BibleReadingStyle.light;
     final notificationsEnabled = preferences?.notificationsEnabled ?? true;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-        24,
-        0,
-        24,
-        MediaQuery.paddingOf(context).bottom + 24,
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Configuración', style: theme.textTheme.titleLarge),
-          const SizedBox(height: 16),
-          _buildCard(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 12, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Configuración', style: theme.textTheme.titleLarge),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  tooltip: 'Cerrar configuración',
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+          ),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                24,
+                8,
+                24,
+                MediaQuery.paddingOf(context).bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildCard(
             context,
             title: 'Lectura',
             icon: Icons.text_fields,
@@ -345,10 +366,14 @@ class _SettingsSheetState extends ConsumerState<SettingsSheet> {
                 title: const Text('Acerca de, Licencias y Privacidad'),
                 subtitle: const Text('Atribución bíblica, fuentes SIL OFL y filosofía local-first'),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  context.push('/about');
-                },
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    context.push('/about');
+                  },
+                ),
+              ),
+            ),
+                ],
               ),
             ),
           ),

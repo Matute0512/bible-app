@@ -28,6 +28,7 @@ class VerseShareSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: false,
       backgroundColor: Colors.transparent,
       builder: (ctx) => VerseShareSheet(
         reference: reference,

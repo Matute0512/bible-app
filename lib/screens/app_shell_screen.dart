@@ -31,51 +31,59 @@ class AppShellScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final readingStyle = BibleReadingStyle.of(context);
 
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: readingStyle.surfaceColor,
-          border: Border(
-            top: BorderSide(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
-              width: 1,
+    return PopScope(
+      canPop: navigationShell.currentIndex == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && navigationShell.currentIndex != 0) {
+          navigationShell.goBranch(0);
+        }
+      },
+      child: Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: readingStyle.surfaceColor,
+            border: Border(
+              top: BorderSide(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+                width: 1,
+              ),
             ),
           ),
-        ),
-        child: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
-          onDestinationSelected: _onDestinationSelected,
-          backgroundColor: readingStyle.surfaceColor,
-          indicatorColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.7),
-          elevation: 0,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home_rounded),
-              label: 'Inicio',
-              tooltip: 'Inicio',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.menu_book_outlined),
-              selectedIcon: Icon(Icons.menu_book_rounded),
-              label: 'Biblia',
-              tooltip: 'Explorar libros y capítulos',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.bookmark_border_rounded),
-              selectedIcon: Icon(Icons.bookmark_rounded),
-              label: 'Guardados',
-              tooltip: 'Favoritos, resaltados y notas',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.hub_outlined),
-              selectedIcon: Icon(Icons.hub_rounded),
-              label: 'Estudio',
-              tooltip: 'Red de conexiones y estudio',
-            ),
-          ],
+          child: NavigationBar(
+            selectedIndex: navigationShell.currentIndex,
+            onDestinationSelected: _onDestinationSelected,
+            backgroundColor: readingStyle.surfaceColor,
+            indicatorColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.7),
+            elevation: 0,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home_rounded),
+                label: 'Inicio',
+                tooltip: 'Inicio',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.menu_book_outlined),
+                selectedIcon: Icon(Icons.menu_book_rounded),
+                label: 'Biblia',
+                tooltip: 'Explorar libros y capítulos',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.bookmark_border_rounded),
+                selectedIcon: Icon(Icons.bookmark_rounded),
+                label: 'Guardados',
+                tooltip: 'Favoritos, resaltados y notas',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.hub_outlined),
+                selectedIcon: Icon(Icons.hub_rounded),
+                label: 'Estudio',
+                tooltip: 'Red de conexiones y estudio',
+              ),
+            ],
+          ),
         ),
       ),
     );

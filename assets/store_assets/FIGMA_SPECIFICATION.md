@@ -63,3 +63,4 @@ Tu cuenta de Figma (`matitorres@uade.edu.ar`) está conectada a través de Compo
 2. Arrastrá los archivos vectoriales `assets/store_assets/icon_512.svg` y `feature_graphic_1024x500.svg` directamente a un lienzo nuevo.
 3. Se importarán todas las capas vectoriales separadas (trazos del códice, cinta dorada, estrellas, gradientes y tipografías editables).
 4. Si creás un archivo de Figma y compartís la URL, el agente puede leer los identificadores de nodos (`FIGMA_GET_FILE_JSON` y `FIGMA_RENDER_IMAGES_OF_FILE_NODES`) para sincronizar cambios directamente.
+

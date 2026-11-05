@@ -28,6 +28,7 @@ class NoteEditorSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      showDragHandle: false,
       backgroundColor: Colors.transparent,
       builder: (ctx) => NoteEditorSheet(
         reference: reference,
@@ -105,11 +106,13 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Nota en ${widget.reference}',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
+              Expanded(
+                child: Text(
+                  'Nota en ${widget.reference}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
                 ),
               ),
               if (widget.initialNote != null && widget.onDelete != null)
@@ -121,6 +124,11 @@ class _NoteEditorSheetState extends State<NoteEditorSheet> {
                     Navigator.of(context).pop();
                   },
                 ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: 'Cerrar',
+                onPressed: () => Navigator.of(context).pop(),
+              ),
             ],
           ),
           const SizedBox(height: 12),

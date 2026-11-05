@@ -290,6 +290,7 @@ class PlansScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      showDragHandle: false,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _PlanDetailSheet(plan: plan),
     );

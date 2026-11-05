@@ -161,7 +161,13 @@ class _SavedScreenState extends ConsumerState<SavedScreen>
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           tooltip: 'Volver',
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.go('/dashboard');
+            }
+          },
         ),
         title: Text(
           'Guardados y Estudio',

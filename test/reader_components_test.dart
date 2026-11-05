@@ -77,7 +77,9 @@ void main() {
       expect(switchFinder, findsOneWidget);
       expect(tester.widget<Switch>(switchFinder).value, isTrue);
 
-      // Tap to disable notifications
+      // Ensure visible inside SingleChildScrollView and tap to disable notifications
+      await tester.ensureVisible(switchFinder);
+      await tester.pumpAndSettle();
       await tester.tap(switchFinder);
       await tester.pumpAndSettle();
 
@@ -87,6 +89,66 @@ void main() {
         isFalse,
       );
       expect(mockNotification.cancelDailyCalled, greaterThanOrEqualTo(1));
+    });
+
+    testWidgets('dismisses via close button without modifying any preferences', (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'pref_notifications_enabled': true,
+      });
+
+      final mockNotification = MockNotificationService();
+      final container = ProviderContainer(
+        overrides: [
+          notificationServiceProvider.overrideWithValue(mockNotification),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(sharedPreferencesProvider.future);
+      final initialPrefs = await container.read(userPreferencesProvider.future);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: BibleTheme.build(Brightness.light),
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () {
+                    showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      showDragHandle: true,
+                      builder: (_) => const SettingsSheet(),
+                    );
+                  },
+                  child: const Text('Abrir'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Abrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Configuración'), findsOneWidget);
+      final closeBtn = find.byTooltip('Cerrar configuración');
+      expect(closeBtn, findsOneWidget);
+
+      await tester.tap(closeBtn);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Configuración'), findsNothing);
+      final finalPrefs = container.read(userPreferencesProvider).value;
+      expect(finalPrefs?.fontSizeMultiplier, equals(initialPrefs.fontSizeMultiplier));
+      expect(finalPrefs?.themeMode, equals(initialPrefs.themeMode));
+      expect(finalPrefs?.translation, equals(initialPrefs.translation));
+      expect(finalPrefs?.notificationsEnabled, equals(initialPrefs.notificationsEnabled));
+      expect(finalPrefs?.notificationTime, equals(initialPrefs.notificationTime));
     });
   });
 

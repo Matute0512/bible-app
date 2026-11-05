@@ -105,43 +105,48 @@ class GraphExplorerWidget extends ConsumerWidget {
       }
     }
 
-    return SafeArea(
-      top: false,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(24, 4, 24, bottomInset + 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHeading(context, center, originHint, colorScheme),
-            const SizedBox(height: 6),
-            if (connections.isEmpty)
-              _buildEmptyState(context, colorScheme)
-            else ...[
-              _GraphCanvas(
-                center: center,
-                connections: connections,
-                colorScheme: colorScheme,
-                onOpenPassage: onOpenPassage,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Relaciones',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+      ),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(24, 4, 24, bottomInset + 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildHeading(context, center, originHint, colorScheme),
+              const SizedBox(height: 6),
+              if (connections.isEmpty)
+                _buildEmptyState(context, colorScheme)
+              else ...[
+                _GraphCanvas(
+                  center: center,
+                  connections: connections,
+                  colorScheme: colorScheme,
+                  onOpenPassage: onOpenPassage,
                 ),
-              ),
-              const SizedBox(height: 4),
-              for (final connection in connections)
-                _ConnectionRow(
-                  key: ValueKey(
-                    '${connection.target.reference}-${connection.kind}',
+                const SizedBox(height: 12),
+                Text(
+                  'Relaciones',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  connection: connection,
-                  onTap: () => onOpenPassage(connection.target),
                 ),
+                const SizedBox(height: 4),
+                for (final connection in connections)
+                  _ConnectionRow(
+                    key: ValueKey(
+                      '${connection.target.reference}-${connection.kind}',
+                    ),
+                    connection: connection,
+                    onTap: () => onOpenPassage(connection.target),
+                  ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -154,7 +159,7 @@ class GraphExplorerWidget extends ConsumerWidget {
     ColorScheme colorScheme,
   ) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
           padding: const EdgeInsets.all(10),
@@ -184,6 +189,11 @@ class GraphExplorerWidget extends ConsumerWidget {
                 ),
             ],
           ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.close),
+          tooltip: 'Cerrar',
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ],
     );

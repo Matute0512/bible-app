@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../models/bible_chapter.dart';
@@ -170,6 +171,20 @@ class _ReadingScreenState extends ConsumerState<ReadingScreen>
             duration: const Duration(milliseconds: 200),
             opacity: _showControls ? 1.0 : 0.0,
             child: AppBar(
+              leading: (Navigator.of(context).canPop() ||
+                      GoRouter.maybeOf(context) != null)
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      tooltip: 'Volver',
+                      onPressed: () {
+                        if (Navigator.of(context).canPop()) {
+                          Navigator.of(context).pop();
+                        } else {
+                          GoRouter.maybeOf(context)?.go('/dashboard');
+                        }
+                      },
+                    )
+                  : null,
               title: const Text('Lectura de Hoy'),
               centerTitle: true,
               actions: [

@@ -79,6 +79,8 @@ class VerseActionSheet extends ConsumerWidget {
 
       isScrollControlled: true,
 
+      showDragHandle: false,
+
       backgroundColor: Colors.transparent,
 
       builder: (ctx) => VerseActionSheet(
