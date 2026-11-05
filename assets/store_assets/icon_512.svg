@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#252038"/>
+      <stop offset="70%" stop-color="#171324"/>
+      <stop offset="100%" stop-color="#0E0B17"/>
+    </radialGradient>
+    <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E1A2E"/>
+      <stop offset="100%" stop-color="#130F1F"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F3C343"/>
+      <stop offset="60%" stop-color="#D4A017"/>
+      <stop offset="100%" stop-color="#9E740B"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="512" height="512" fill="url(#bgGrad)"/>
+
+  <!-- Squircle Base Frame -->
+  <rect x="16" y="16" width="480" height="480" rx="110" fill="url(#frameGrad)" stroke="#D4A017" stroke-width="3" stroke-opacity="0.45" filter="url(#shadow)"/>
+  <rect x="31" y="31" width="450" height="450" rx="95" fill="none" stroke="#D4A017" stroke-width="1.5" stroke-dasharray="6 6" stroke-opacity="0.25"/>
+
+  <!-- Central Codex -->
+  <g transform="translate(116, 150)" filter="url(#shadow)">
+    <!-- Cover Base -->
+    <path d="M140 25 C100 15 35 20 15 35 L15 165 C35 150 100 145 140 155 Z" fill="#9E740B"/>
+    <path d="M140 25 C180 15 245 20 265 35 L265 165 C245 150 180 145 140 155 Z" fill="#B8860B"/>
+
+    <!-- Parchment Pages -->
+    <path d="M140 22 C102 12 38 18 20 32 L20 160 C38 146 102 140 140 150 Z" fill="#FDFBF7"/>
+    <path d="M140 24 C105 15 45 20 28 32 L28 158 C45 146 105 141 140 150 Z" fill="#F4EADB"/>
+    <path d="M140 22 C178 12 242 18 260 32 L260 160 C242 146 178 140 140 150 Z" fill="#FAF6EE"/>
+
+    <!-- Text Lines -->
+    <line x1="45" y1="55" x2="120" y2="52" stroke="#C4B9A7" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="45" y1="72" x2="120" y2="69" stroke="#C4B9A7" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="45" y1="89" x2="120" y2="86" stroke="#C4B9A7" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="45" y1="106" x2="120" y2="103" stroke="#C4B9A7" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="45" y1="123" x2="100" y2="121" stroke="#C4B9A7" stroke-width="3.5" stroke-linecap="round"/>
+
+    <line x1="160" y1="52" x2="235" y2="55" stroke="#C4B9A7" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="160" y1="69" x2="235" y2="72" stroke="#C4B9A7" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="160" y1="86" x2="235" y2="89" stroke="#C4B9A7" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="160" y1="103" x2="235" y2="106" stroke="#C4B9A7" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="160" y1="120" x2="215" y2="122" stroke="#C4B9A7" stroke-width="3.5" stroke-linecap="round"/>
+
+    <!-- Spine Crease -->
+    <path d="M136 21 Q140 20 144 21 L144 153 Q140 152 136 153 Z" fill="#3D3223" opacity="0.35"/>
+
+    <!-- Gold Ribbon Marker -->
+    <polygon points="127,-10 153,-10 153,195 140,212 127,195" fill="url(#goldGrad)"/>
+    <!-- Central Liturgical Star -->
+    <text x="140" y="78" fill="#FFFFFF" font-family="'Times New Roman', serif" font-size="28" font-weight="bold" text-anchor="middle" filter="url(#shadow)">✦</text>
+  </g>
+</svg>

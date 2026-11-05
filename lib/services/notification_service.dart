@@ -38,7 +38,11 @@ class NotificationService {
 
     // Load the timezone database and point `tz.local` at the device's zone so
     // scheduled times match the user's wall clock. See [_initTimezone].
-    await _initTimezone();
+    try {
+      await _initTimezone();
+    } catch (e) {
+      debugPrint('[notifications] _initTimezone unhandled error: $e');
+    }
 
     const settings = InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
@@ -94,7 +98,7 @@ class NotificationService {
   /// name makes the native side throw and the reminder is silently dropped.
   Future<void> _initTimezone() async {
     tz.initializeTimeZones();
-    String targetTimeZone = 'UTC'; // Safe fallback by default.
+    String targetTimeZone = 'Etc/UTC'; // Safe canonical fallback in timezone database.
 
     try {
       final timezoneInfo = await FlutterTimezone.getLocalTimezone();
@@ -106,6 +110,8 @@ class NotificationService {
       // ZoneId.of() accepts (some Android devices report legacy aliases).
       if (deviceTz == 'America/Buenos_Aires') {
         targetTimeZone = 'America/Argentina/Buenos_Aires';
+      } else if (deviceTz == 'UTC' || deviceTz == 'GMT') {
+        targetTimeZone = 'Etc/UTC';
       } else {
         targetTimeZone = deviceTz;
       }
@@ -117,9 +123,13 @@ class NotificationService {
     } catch (e) {
       debugPrint(
         '[notifications] Timezone lookup failed for "$targetTimeZone" '
-        '($e). Falling back to UTC.',
+        '($e). Falling back to Etc/UTC.',
       );
-      tz.setLocalLocation(tz.getLocation('UTC'));
+      try {
+        tz.setLocalLocation(tz.getLocation('Etc/UTC'));
+      } catch (_) {
+        tz.setLocalLocation(tz.UTC);
+      }
     }
   }
 
