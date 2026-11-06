@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidad — bible_app (Un capítulo al día)</title>
+  <meta name="description" content="Política de Privacidad oficial de bible_app («Un capítulo al día»). Aplicación de lectura bíblica 100% desconectada, sin anuncios y sin recopilación de datos.">
+  <meta name="author" content="Matias Torres">
+  <meta name="robots" content="index, follow">
+  
+  <!-- OpenGraph / Redes Sociales / Google Play -->
+  <meta property="og:title" content="Política de Privacidad — bible_app (Un capítulo al día)">
+  <meta property="og:description" content="Lectura bíblica diaria con diseño editorial: sin cuentas, sin anuncios y 100% offline. Toda tu actividad se guarda exclusivamente en tu dispositivo.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://matute0512.github.io/bible-app/">
+  <meta property="og:image" content="https://matute0512.github.io/bible-app/icon_512.png">
+  <link rel="icon" type="image/png" href="icon_512.png">
+  
+  <!-- Tipografías Oficiales de la Aplicación -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-canvas: #FAF8F5;
+      --surface-card: #FFFFFF;
+      --surface-subtle: #F4EFEB;
+      --brand-indigo: #1A1629;
+      --brand-indigo-deep: #120F1D;
+      --brand-gold: #B8860B;
+      --brand-gold-light: #D4AF37;
+      --brand-gold-glow: rgba(212, 175, 55, 0.15);
+      --text-primary: #231F2E;
+      --text-secondary: #5C5768;
+      --text-muted: #827E8F;
+      --border-color: #E8E2D8;
+      --badge-bg: #EAF3EC;
+      --badge-text: #1E6B37;
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --shadow-subtle: 0 4px 24px rgba(26, 22, 41, 0.05);
+      --shadow-elevated: 0 12px 36px rgba(26, 22, 41, 0.08);
+      --font-serif: 'Lora', Georgia, serif;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.65;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 80px;
+    }
+
+    /* Top Navigation / Brand Header */
+    header.site-header {
+      background: linear-gradient(135deg, var(--brand-indigo-deep) 0%, var(--brand-indigo) 100%);
+      color: #FFFFFF;
+      padding: 48px 24px 64px;
+      border-bottom: 2px solid var(--brand-gold-light);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header.site-header::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--brand-gold-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .brand-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .brand-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      flex-shrink: 0;
+      background: #171324;
+    }
+
+    .brand-title {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: #F8F5EE;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+      color: #C2BFD0;
+      font-weight: 400;
+    }
+
+    .hero-heading {
+      font-family: var(--font-serif);
+      font-size: clamp(28px, 4.5vw, 40px);
+      font-weight: 700;
+      line-height: 1.25;
+      color: #FFFFFF;
+      margin-bottom: 14px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: #D6D3E2;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-pill::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--badge-text);
+    }
+
+    /* Core Highlights Banner (Floating card) */
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-top: -36px;
+      margin-bottom: 40px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .highlight-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px 18px;
+      box-shadow: var(--shadow-subtle);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .highlight-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-elevated);
+    }
+
+    .highlight-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .highlight-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--brand-indigo);
+      margin-bottom: 4px;
+    }
+
+    .highlight-desc {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    /* Main Policy Content Cards */
+    .policy-section {
+      background: var(--surface-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 32px 36px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .policy-section h2 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--brand-indigo);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .section-number {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand-gold);
+      background: rgba(184, 134, 11, 0.1);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .policy-section p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      font-size: 15.5px;
+    }
+
+    .policy-section p:last-child {
+      margin-bottom: 0;
+    }
+
+    .policy-list {
+      list-style: none;
+      margin: 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .policy-list li {
+      position: relative;
+      padding-left: 28px;
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .policy-list li::before {
+      content: "✦";
+      position: absolute;
+      left: 6px;
+      top: 1px;
+      color: var(--brand-gold);
+      font-size: 13px;
+    }
+
+    .policy-list li strong {
+      color: var(--text-primary);
+    }
+
+    /* Callout Note */
+    .callout-box {
+      background: var(--surface-subtle);
+      border-left: 4px solid var(--brand-gold);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 14.5px;
+      color: var(--text-secondary);
+    }
+
+    .callout-box strong {
+      color: var(--brand-indigo);
+    }
+
+    /* Permissions Table */
+    .table-responsive {
+      overflow-x: auto;
+      margin: 18px 0;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    table.permissions-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    table.permissions-table th {
+      background: var(--surface-subtle);
+      color: var(--brand-indigo);
+      font-weight: 600;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    table.permissions-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+
+    table.permissions-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 12.5px;
+      background: rgba(26, 22, 41, 0.06);
+      color: var(--brand-indigo);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Play Store Quick Copy Widget */
+    .copy-banner {
+      background: linear-gradient(135deg, #F9F5EC 0%, #F3EDE0 100%);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .copy-banner-text {
+      font-size: 14px;
+      color: var(--brand-indigo);
+      font-weight: 500;
+    }
+
+    .btn-copy {
+      background: var(--brand-indigo);
+      color: #FFFFFF;
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s ease;
+    }
+
+    .btn-copy:hover {
+      background: #2D2742;
+    }
+
+    /* Footer */
+    footer.site-footer {
+      text-align: center;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 13.5px;
+    }
+
+    footer.site-footer a {
+      color: var(--brand-gold);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    footer.site-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Print styles for legal reference */
+    @media print {
+      body {
+        background: #FFFFFF;
+        color: #000000;
+        font-size: 12pt;
+      }
+      header.site-header {
+        background: none;
+        color: #000000;
+        border-bottom: 1pt solid #000000;
+        padding: 0 0 16pt;
+      }
+      .highlights-grid, .copy-banner, .btn-copy {
+        display: none;
+      }
+      .policy-section {
+        border: none;
+        box-shadow: none;
+        padding: 12pt 0;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .policy-section {
+        padding: 24px 20px;
+      }
+      header.site-header {
+        padding: 36px 16px 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Encabezado Editorial -->
+  <header class="site-header">
+    <div class="container">
+      <div class="brand-bar">
+        <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <defs>
+            <radialGradient id="bgGrad" cx="50%" cy="35%" r="70%">
+              <stop offset="0%" stop-color="#252038"/>
+              <stop offset="70%" stop-color="#171324"/>
+              <stop offset="100%" stop-color="#0E0B17"/>
+            </radialGradient>
+            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#F3C343"/>
+              <stop offset="60%" stop-color="#D4A017"/>
+              <stop offset="100%" stop-color="#9E740B"/>
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" rx="110" fill="url(#bgGrad)"/>
+          <g transform="translate(116, 150)">
+            <path d="M140 25 C100 15 35 20 15 35 L15 165 C35 150 100 145 140 155 Z" fill="#9E740B"/>
+            <path d="M140 25 C180 15 245 20 265 35 L265 165 C245 150 180 145 140 155 Z" fill="#B8860B"/>
+            <path d="M140 22 C102 12 38 18 20 32 L20 160 C38 146 102 140 140 150 Z" fill="#FDFBF7"/>
+            <path d="M140 22 C178 12 242 18 260 32 L260 160 C242 146 178 140 140 150 Z" fill="#FAF6EE"/>
+            <polygon points="127,-10 153,-10 153,195 140,212 127,195" fill="url(#goldGrad)"/>
+            <text x="140" y="78" fill="#FFFFFF" font-family="'Times New Roman', serif" font-size="28" font-weight="bold" text-anchor="middle">✦</text>
+          </g>
+        </svg>
+        <div>
+          <div class="brand-title">bible_app</div>
+          <div class="brand-subtitle">Un capítulo al día · Lectura Bíblica Editorial</div>
+        </div>
+      </div>
+      <h1 class="hero-heading">Política de Privacidad</h1>
+      <div class="hero-meta">
+        <span class="badge-pill">100% Desconectada & Local</span>
+        <span>Última actualización: Noviembre de 2026</span>
+        <span>•</span>
+        <span>Versión aplicable: 1.0.0+</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Tarjetas de Resumen Rápido -->
+    <div class="highlights-grid">
+      <div class="highlight-card">
+        <span class="highlight-icon">🔒</span>
+        <div class="highlight-title">Cero Datos Personales</div>
+        <div class="highlight-desc">No solicitamos nombre, correo, teléfono ni identificación alguna.</div>
+      </div>
+      <div class="highlight-card">
+        <span class="highlight-icon">📴</span>
+        <div class="highlight-title">Local-First por Diseño</div>
+        <div class="highlight-desc">Tus notas, favoritos y lectura permanecen en la memoria de tu móvil.</div>
+      </div>
+      <div class="highlight-card">
+        <span class="highlight-icon">🚫</span>
+        <div class="highlight-title">Sin Publicidad ni Tracking</div>
+        <div class="highlight-desc">No incluimos Google AdMob, SDKs comerciales ni analíticas invasivas.</div>
+      </div>
+      <div class="highlight-card">
+        <span class="highlight-icon">🛡️</span>
+        <div class="highlight-title">Respaldo Bajo tu Control</div>
+        <div class="highlight-desc">Exportá e importá tus apuntes en JSON sin intermediarios en la nube.</div>
+      </div>
+    </div>
+
+    <!-- Barra de Copiado Rápido para Play Console -->
+    <div class="copy-banner">
+      <div class="copy-banner-text">
+        <strong>URL oficial para Google Play Console:</strong>
+        <span id="policyUrlText" style="font-family: monospace; margin-left: 6px;">https://matute0512.github.io/bible-app/</span>
+      </div>
+      <button class="btn-copy" onclick="copyPolicyUrl()">
+        <span id="copyIcon">📋</span> <span id="copyLabel">Copiar enlace</span>
+      </button>
+    </div>
+
+    <!-- 1. Compromiso de Privacidad Absoluta -->
+    <section class="policy-section">
+      <h2><span class="section-number">01</span> Compromiso de Privacidad Absoluta</h2>
+      <p>
+        Creemos firmemente que la lectura, la meditación y el estudio devocional de las Sagradas Escrituras forman parte de la intimidad más sagrada de cada persona. Por esta razón, <strong>bible_app («Un capítulo al día»)</strong> ha sido concebida bajo el principio de <em>Privacidad por Diseño</em> (Privacy by Design).
+      </p>
+      <ul class="policy-list">
+        <li><strong>No recopilamos información personal identificable (PII)</strong>: No requerimos ni almacenamos nombres, direcciones de correo electrónico, números de teléfono ni datos biométricos.</li>
+        <li><strong>Sin cuentas obligatorias ni inicio de sesión</strong>: La totalidad de las funciones de lectura, estudio, notas, progreso temático y visualización de conexiones están disponibles de inmediato sin necesidad de crear una cuenta ni registrarte.</li>
+        <li><strong>Ausencia total de publicidad comercial y rastreadores</strong>: La aplicación no incorpora SDKs publicitarios (como AdMob o Unity Ads), ni herramientas de rastreo entre aplicaciones, ni plataformas de telemetría invasivas.</li>
+      </ul>
+    </section>
+
+    <!-- 2. Almacenamiento Local de Datos -->
+    <section class="policy-section">
+      <h2><span class="section-number">02</span> Almacenamiento Local de Datos</h2>
+      <p>
+        Toda tu actividad devocional y de estudio reside de forma exclusiva en la memoria física de tu dispositivo móvil, gestionada mediante la base de datos relacional local <strong>SQLite (a través de la biblioteca Drift)</strong>:
+      </p>
+      <ul class="policy-list">
+        <li><strong>Notas personales, versículos favoritos y colores de resaltado</strong>: Se guardan localmente vinculados a las coordenadas canónicas del versículo (libro, capítulo y número), sin transmitirse jamás a ningún servidor externo.</li>
+        <li><strong>Historial de lectura y racha diaria</strong>: El registro de capítulos marcados como leídos, el cálculo de días consecutivos y el avance en los planes de lectura residen exclusivamente en el almacenamiento seguro de la aplicación.</li>
+        <li><strong>Copia de seguridad local (JSON Portable)</strong>: El usuario puede generar en cualquier momento un archivo de exportación de sus datos en formato JSON legible. Esta acción es 100% iniciada por el usuario y se procesa mediante las herramientas del propio sistema operativo (guardar archivo, enviar a otra app), sin pasar por ningún servidor intermedio.</li>
+      </ul>
+      <div class="callout-box">
+        <strong>Aviso de desinstalación:</strong> Debido a que no almacenamos tus datos en la nube, si desinstalaras la aplicación sin haber exportado una copia de seguridad local, tus notas y resaltados se eliminarán con el paquete de la app de acuerdo a las directivas de seguridad de Android.
+      </div>
+    </section>
+
+    <!-- 3. Conectividad y Servicios Externos -->
+    <section class="policy-section">
+      <h2><span class="section-number">03</span> Conexión a Internet y Servicios Externos</h2>
+      <p>
+        La aplicación está construida sobre una arquitectura <strong>Offline-First</strong> (desconectada por defecto). La conectividad a internet se utiliza de forma estricta y limitada para lo siguiente:
+      </p>
+      <ul class="policy-list">
+        <li><strong>Descarga bajo demanda de capítulos bíblicos</strong>: Los textos bíblicos se obtienen directamente mediante conexiones seguras HTTPS desde el repositorio libre y de código abierto <code>bible.helloao.org</code> (eBible.org).</li>
+        <li><strong>Caché local permanente</strong>: Una vez que un capítulo es descargado por primera vez, se indexa y almacena en la base de datos local SQLite. En futuras aperturas, el texto se lee 100% desconectado sin consumir datos de red.</li>
+        <li><strong>Anonimato en las peticiones</strong>: Durante la descarga de capítulos no se transmite ningún identificador del dispositivo, dirección IP vinculada a un perfil, IMEI ni identificador publicitario de Android (GAID).</li>
+      </ul>
+    </section>
+
+    <!-- 4. Permisos del Sistema en Android -->
+    <section class="policy-section">
+      <h2><span class="section-number">04</span> Permisos Solicitados en Android</h2>
+      <p>
+        En cumplimiento con las directivas de Google Play, auditamos y declaramos los únicos permisos que la aplicación requiere en el archivo <code>AndroidManifest.xml</code>:
+      </p>
+      <div class="table-responsive">
+        <table class="permissions-table">
+          <thead>
+            <tr>
+              <th>Permiso</th>
+              <th>Propósito</th>
+              <th>Sensibilidad</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>POST_NOTIFICATIONS</code></td>
+              <td>Permite mostrar la notificación local del capítulo del día únicamente si activaste voluntariamente el recordatorio diario.</td>
+              <td>Estándar (Android 13+)</td>
+            </tr>
+            <tr>
+              <td><code>RECEIVE_BOOT_COMPLETED</code></td>
+              <td>Permite reprogramar en el dispositivo la alarma de tu recordatorio diario en caso de que reinicies el teléfono.</td>
+              <td>Normal</td>
+            </tr>
+            <tr>
+              <td><code>VIBRATE</code></td>
+              <td>Proporciona una sutil respuesta háptica al seleccionar versículos o interactuar con el lienzo de estudio.</td>
+              <td>Normal</td>
+            </tr>
+            <tr>
+              <td><code>INTERNET</code></td>
+              <td>Descarga inicial bajo demanda de los capítulos bíblicos desde el CDN abierto de eBible.</td>
+              <td>Normal</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>Garantía de transparencia:</strong> No declaramos ni utilizamos permisos de alto riesgo como <code>SCHEDULE_EXACT_ALARM</code>, ubicación geográfica, lectura de contactos ni acceso a archivos externos del dispositivo.
+      </p>
+    </section>
+
+    <!-- 5. Licencias y Textos Bíblicos -->
+    <section class="policy-section">
+      <h2><span class="section-number">05</span> Licencias y Atribución Legal</h2>
+      <p>
+        Todos los textos bíblicos y recursos visuales incorporados cuentan con la atribución y licenciamiento correspondiente:
+      </p>
+      <ul class="policy-list">
+        <li><strong>Santa Biblia Reina Valera Gómez (RVG)</strong>: © 2004–2023 Dr. Humberto Gómez Caballero / eBible.org. Texto utilizado con permiso para la lectura fiel sin alteraciones.</li>
+        <li><strong>Santa Biblia Libre para el Mundo (BLM)</strong>: Edición Católica (73 libros) licenciada bajo <strong>Creative Commons Atribución-CompartirIgual 4.0 Internacional (CC BY-SA 4.0)</strong>, provista por eBible.org.</li>
+        <li><strong>Tipografías Lora e Inter</strong>: Tipografías de alta legibilidad distribuidas bajo la licencia abierta <strong>SIL Open Font License 1.1 (OFL)</strong>.</li>
+      </ul>
+    </section>
+
+    <!-- 6. Ejercicio de Derechos y Control de Información -->
+    <section class="policy-section">
+      <h2><span class="section-number">06</span> Ejercicio de Derechos (RGPD / CCPA)</h2>
+      <p>
+        Dado que <strong>bible_app</strong> no recopila, no comercializa ni almacena ningún dato personal en servidores externos, el control de tu información es total y soberano:
+      </p>
+      <ul class="policy-list">
+        <li><strong>Derecho de Acceso y Portabilidad</strong>: Podés extraer en cualquier momento la totalidad de tus notas, versículos favoritos y progreso mediante el botón <em>«Exportar JSON»</em> en la pantalla de Configuración.</li>
+        <li><strong>Derecho de Supresión (Eliminación Total)</strong>: Podés borrar selectivamente cualquier nota o favorito dentro de la app, o limpiar el almacenamiento por completo desde los Ajustes de Aplicaciones de tu teléfono o desinstalando la app.</li>
+      </ul>
+    </section>
+
+    <!-- 7. Contacto y Código Abierto -->
+    <section class="policy-section">
+      <h2><span class="section-number">07</span> Contacto y Transparencia</h2>
+      <p>
+        Si tenés inquietudes, sugerencias o consultas técnicas acerca de esta política de privacidad o del funcionamiento de la aplicación, podés ponerte en contacto a través de los canales oficiales:
+      </p>
+      <ul class="policy-list">
+        <li><strong>Repositorio del proyecto</strong>: <a href="https://github.com/Matute0512/bible-app" target="_blank" rel="noopener noreferrer" style="color: var(--brand-gold); font-weight: 600;">github.com/Matute0512/bible-app</a></li>
+        <li><strong>Reporte de incidencias</strong>: Podes abrir un ticket público en la pestaña de <em>Issues</em> del repositorio.</li>
+      </ul>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <p>© 2026 bible_app («Un capítulo al día»). Desarrollado con devoción y respeto por la privacidad.</p>
+      <p style="margin-top: 6px;">
+        Código abierto en <a href="https://github.com/Matute0512/bible-app" target="_blank" rel="noopener noreferrer">GitHub</a> · 
+        Distribuido para Android a través de Google Play Store.
+      </p>
+    </footer>
+
+  </main>
+
+  <script>
+    function copyPolicyUrl() {
+      const url = document.getElementById('policyUrlText').innerText.trim();
+      navigator.clipboard.writeText(url).then(() => {
+        const copyLabel = document.getElementById('copyLabel');
+        const copyIcon = document.getElementById('copyIcon');
+        copyLabel.innerText = '¡Copiado!';
+        copyIcon.innerText = '✓';
+        setTimeout(() => {
+          copyLabel.innerText = 'Copiar enlace';
+          copyIcon.innerText = '📋';
+        }, 2500);
+      }).catch(err => {
+        console.error('Error al copiar:', err);
+      });
+    }
+  </script>
+</body>
+</html>

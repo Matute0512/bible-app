@@ -37,11 +37,12 @@ La aplicación está diseñada con una arquitectura *Offline-First* (desconectad
 
 ## 4. Permisos Solicitados
 
-La aplicación solicita únicamente los permisos estrictamente indispensables para su funcionamiento:
+La aplicación solicita únicamente los permisos indispensables para su funcionamiento local:
 
-1. **Notificaciones (`POST_NOTIFICATIONS`)**: Para enviar el recordatorio diario en el horario configurado por el usuario.
-2. **Alarmas exactas (`SCHEDULE_EXACT_ALARM`)**: Para disparar puntualmente la notificación del capítulo del día.
-3. **Inicio del sistema (`RECEIVE_BOOT_COMPLETED`)**: Para reprogramar el recordatorio diario tras reiniciar el dispositivo móvil.
+1. **Notificaciones (`POST_NOTIFICATIONS`)**: Para enviar el recordatorio diario de lectura en el horario que configures voluntariamente.
+2. **Inicio del sistema (`RECEIVE_BOOT_COMPLETED`)**: Para reprogramar tus recordatorios locales en el dispositivo tras un reinicio.
+3. **Respuesta háptica (`VIBRATE`)**: Para confirmación táctil sutil al interactuar con versículos y notas.
+4. **Acceso a red (`INTERNET`)**: Exclusivamente para descargar bajo demanda el texto bíblico de los capítulos solicitados desde `bible.helloao.org` (eBible.org) y guardarlos en caché local permanente.
 
 ---
 
